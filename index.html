@@ -634,7 +634,7 @@ tr:hover td { background: var(--bg3); }
 // ════════════════════════════════════════
 //  ★ 설정 — 여기만 바꾸면 됩니다
 // ════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTyVCA8s8x0imRgI1q_byOFE2cAXrV_f8Drhgc8zmuQr6uXwwl5LKF8oNoTXRFWntjvw/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1WLG9u2s9KQhvO_E5ZhPnPTWdYsmMMVdeJi5dmaaNiuqL_VvWsbHRapPo-qoUmj7Dwg/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
 const ADMIN_PW   = '1234';   // 관리자 비밀번호
 // ════════════════════════════════════════
 
@@ -642,10 +642,11 @@ const FLS = ['6710','5419','8328','7027','6527','8108','6427','7927','6599'];
 const FL_TONS = {'6710':'25톤','5419':'20톤','8328':'16톤','7027':'5톤','6527':'5톤','8108':'7톤','6427':'7톤','7927':'7톤','6599':'7톤'};
 const FL_RATE = {'6710':330000,'5419':180000,'8328':140000,'7027':60000,'6527':60000,'8108':60000,'6427':60000,'7927':60000,'6599':60000};
 
-// 40분 단위 시간 계산: 매 40분마다 1시간으로 올림
+// 40분 단위 시간 계산: 최소 1시간, 이후 40분 초과마다 +1시간
 function calcBilledHours(ms) {
   const totalMin = ms / 60000;
-  return Math.ceil(totalMin / 40);
+  if (totalMin <= 0) return 0;
+  return Math.max(1, Math.ceil(totalMin / 40));
 }
 
 // 단가 계산
@@ -803,7 +804,7 @@ async function confirmEnd() {
   if (SCRIPT_URL) {
     showSending('sending-end', true);
     try {
-      await postToSheet({ action: 'end', rowId: s.rowId, endStr: log.endStr, elapsedMin: Math.round(elapsed/60000) });
+      await postToSheet({ action: 'end', rowId: s.rowId, fl: s.fl, endStr: log.endStr, elapsedMin: Math.round(elapsed/60000) });
     } catch(e) { console.warn('시트 전송 실패:', e); }
     showSending('sending-end', false);
   }
