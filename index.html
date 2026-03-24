@@ -407,7 +407,6 @@ tr:hover td { background: var(--bg3); }
       <p>작업할 호기를 선택해 주세요</p>
     </div>
 
-    <div class="tip">💡 실제 운용 시 QR 스캔 → 해당 호기 자동 선택됩니다</div>
 
     <div class="fl-grid" id="fl-grid"></div>
 
@@ -439,6 +438,10 @@ tr:hover td { background: var(--bg3); }
             <option>유지보수팀</option><option>안전팀</option>
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label">호선 *</label>
+          <input class="form-input" id="inp-vessel" type="text" placeholder="예: 1234호">
+        </div>
       </div>
 
       <div class="form-card">
@@ -453,6 +456,10 @@ tr:hover td { background: var(--bg3); }
           <button class="reason-chip" onclick="pickReason(this)">기타</button>
         </div>
         <div class="form-group" style="margin-top:12px">
+          <label class="form-label">작업 내용 직접 입력 (선택)</label>
+          <input class="form-input" id="inp-reason-custom" type="text" placeholder="직접 입력...">
+        </div>
+        <div class="form-group" style="margin-top:8px">
           <label class="form-label">비고 (선택)</label>
           <textarea class="form-textarea" id="inp-note" placeholder="추가 메모..."></textarea>
         </div>
@@ -546,9 +553,9 @@ tr:hover td { background: var(--bg3); }
         <input class="fi fi-name" id="f-name" type="text" placeholder="담당자 검색" oninput="renderTable()">
         <select class="fi" id="f-fl" onchange="renderTable()">
           <option value="">전체 호기</option>
-          <option>FL-01</option><option>FL-02</option><option>FL-03</option>
-          <option>FL-04</option><option>FL-05</option><option>FL-06</option>
-          <option>FL-07</option><option>FL-08</option><option>FL-09</option>
+          <option>6710</option><option>5419</option><option>8328</option>
+          <option>7027</option><option>6527</option><option>8108</option>
+          <option>6427</option><option>7927</option><option>6599</option>
         </select>
         <select class="fi" id="f-status" onchange="renderTable()">
           <option value="">전체 상태</option>
@@ -561,7 +568,7 @@ tr:hover td { background: var(--bg3); }
         <table>
           <thead>
             <tr>
-              <th>호기</th><th>담당자</th><th>부서</th><th>이용사유</th>
+              <th>호기</th><th>담당자</th><th>부서</th><th>호선</th><th>이용사유</th>
               <th>시작</th><th>종료</th><th>이용시간</th><th>상태</th><th>비고</th>
             </tr>
           </thead>
@@ -583,6 +590,7 @@ tr:hover td { background: var(--bg3); }
       <div class="mrow"><span>지게차</span><span id="mc-fl">-</span></div>
       <div class="mrow"><span>담당자</span><span id="mc-name">-</span></div>
       <div class="mrow"><span>부서</span><span id="mc-dept">-</span></div>
+      <div class="mrow"><span>호선</span><span id="mc-vessel">-</span></div>
       <div class="mrow"><span>이용사유</span><span id="mc-reason">-</span></div>
       <div class="mrow"><span>시작 시각</span><span id="mc-time">-</span></div>
     </div>
@@ -615,11 +623,12 @@ tr:hover td { background: var(--bg3); }
 // ════════════════════════════════════════
 //  ★ 설정 — 여기만 바꾸면 됩니다
 // ════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyG0p1VOUpds7WWysQoY5bXwZCwBo5iZJKhcowtf5YV9e2p_x0DmAIqzplrJWIh8XKVug/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
+const SCRIPT_URL = '';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
 const ADMIN_PW   = '1234';   // 관리자 비밀번호
 // ════════════════════════════════════════
 
-const FLS = ['FL-01','FL-02','FL-03','FL-04','FL-05','FL-06','FL-07','FL-08','FL-09'];
+const FLS = ['6710','5419','8328','7027','6527','8108','6427','7927','6599'];
+const FL_TONS = {'6710':'25톤','5419':'20톤','8328':'16톤','7027':'5톤','6527':'5톤','8108':'7톤','6427':'7톤','7927':'7톤','6599':'7톤'};
 let selFL = null, selReason = null;
 let sessions = JSON.parse(localStorage.getItem('fl-sess') || '{}');
 let logs     = JSON.parse(localStorage.getItem('fl-logs') || '[]');
@@ -653,7 +662,7 @@ function renderFLGrid() {
     d.className = 'fl-card' + (on ? ' in-use' : '') + (sel ? ' selected' : '');
     d.innerHTML = `<div class="fl-dot"></div>
       <div class="fl-num">${fl}</div>
-      <div class="fl-label">${on ? '사용 중' : '대기'}</div>`;
+      <div class="fl-label">${on ? '사용 중' : FL_TONS[fl]||''}</div>`;
     d.onclick = () => selectFL(fl);
     g.appendChild(d);
   });
@@ -685,12 +694,17 @@ function handleStart() {
   if (!selFL) return alert('호기를 선택하세요.');
   const name = document.getElementById('inp-name').value.trim();
   if (!name) return alert('담당자 이름을 입력하세요.');
-  if (!selReason) return alert('이용 사유를 선택하세요.');
+  const vessel = document.getElementById('inp-vessel').value.trim();
+  if (!vessel) return alert('호선을 입력하세요.');
+  const custom = document.getElementById('inp-reason-custom').value.trim();
+  const finalReason = custom || selReason;
+  if (!finalReason) return alert('이용 사유를 선택하거나 직접 입력하세요.');
   const now = new Date();
   document.getElementById('mc-fl').textContent     = selFL;
   document.getElementById('mc-name').textContent   = name;
   document.getElementById('mc-dept').textContent   = document.getElementById('inp-dept').value || '미지정';
-  document.getElementById('mc-reason').textContent = selReason;
+  document.getElementById('mc-vessel').textContent = vessel + '호선';
+  document.getElementById('mc-reason').textContent = finalReason;
   document.getElementById('mc-time').textContent   = fmtTime(now);
   document.getElementById('m-start').classList.add('open');
 }
@@ -698,11 +712,13 @@ function handleStart() {
 async function confirmStart() {
   closeModal('m-start');
   const now = new Date();
+  const custom = document.getElementById('inp-reason-custom').value.trim();
   const s = {
     fl: selFL,
     name: document.getElementById('inp-name').value.trim(),
     dept: document.getElementById('inp-dept').value || '미지정',
-    reason: selReason,
+    vessel: document.getElementById('inp-vessel').value.trim(),
+    reason: custom || selReason,
     note: document.getElementById('inp-note').value.trim(),
     startMs: now.getTime(),
     startStr: fmtTime(now),
@@ -714,6 +730,8 @@ async function confirmStart() {
   // 폼 초기화
   document.getElementById('inp-name').value = '';
   document.getElementById('inp-dept').value = '';
+  document.getElementById('inp-vessel').value = '';
+  document.getElementById('inp-reason-custom').value = '';
   document.getElementById('inp-note').value = '';
   document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('active'));
   selReason = null;
@@ -825,7 +843,6 @@ function lockAdmin() {
 async function loadAdminData() {
   if (!SCRIPT_URL) {
     document.getElementById('script-warn').style.display = '';
-    // 로컬 데이터로 대체
     adminRows = buildLocalRows();
     updateStats(adminRows);
     renderFLMini();
@@ -835,15 +852,28 @@ async function loadAdminData() {
   document.getElementById('script-warn').style.display = 'none';
   document.getElementById('log-tbody').innerHTML = '<tr><td colspan="9" class="load-row">불러오는 중...</td></tr>';
   try {
-    const res = await fetch(SCRIPT_URL + '?action=get');
-    const data = await res.json();
+    const data = await fetchJSONP(SCRIPT_URL + '?action=get&callback=__cb__');
     adminRows = data.rows || [];
   } catch(e) {
+    console.warn('시트 불러오기 실패, 로컬 사용:', e);
     adminRows = buildLocalRows();
   }
   updateStats(adminRows);
   renderFLMini();
   renderTable();
+}
+
+function fetchJSONP(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = '__cb__' + Date.now();
+    const script = document.createElement('script');
+    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, 8000);
+    window[cbName] = (data) => { cleanup(); resolve(data); };
+    script.src = url.replace('__cb__', cbName);
+    script.onerror = () => { cleanup(); reject(new Error('error')); };
+    document.head.appendChild(script);
+    function cleanup() { clearTimeout(timer); delete window[cbName]; script.remove(); }
+  });
 }
 
 function buildLocalRows() {
@@ -906,6 +936,7 @@ function renderTable() {
       <td><span class="fl-tag">${r.fl}</span></td>
       <td>${r.name}</td>
       <td style="color:var(--text2)">${r.dept||'-'}</td>
+      <td style="color:var(--text2)">${r.vessel||'-'}</td>
       <td>${r.reason}</td>
       <td class="mono">${r.startStr}</td>
       <td class="mono" style="color:var(--text2)">${r.endStr||'-'}</td>
@@ -918,9 +949,9 @@ function renderTable() {
 
 function exportCSV() {
   const rows = buildLocalRows();
-  const hd = ['호기','담당자','부서','이용사유','시작','종료','이용시간(분)','상태','비고'];
+  const hd = ['호기','담당자','부서','호선','이용사유','시작','종료','이용시간(분)','상태','비고'];
   const body = rows.map(r => [
-    r.fl, r.name, r.dept||'', r.reason, r.startStr, r.endStr||'',
+    r.fl, r.name, r.dept||'', r.vessel||'', r.reason, r.startStr, r.endStr||'',
     Math.round((r.elapsedMs||0)/60000),
     r.status==='on'?'진행중':'완료', r.note||''
   ].join(','));
