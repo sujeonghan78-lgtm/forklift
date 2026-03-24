@@ -260,7 +260,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .btn-lock:hover { border-color: var(--border2); color: var(--text2); }
 
 /* Stats */
-.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: auto; gap: 12px; margin-bottom: 24px; }
 .stat-card {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 16px 18px;
@@ -322,6 +322,12 @@ tr:hover td { background: var(--bg3); }
 .mono { font-family: var(--mono); font-size: 12px; }
 .fl-tag { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--blue); }
 .empty { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+.btn-del {
+  padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500;
+  background: var(--red-bg); color: var(--red); border: 1px solid #fca5a5;
+  cursor: pointer; font-family: var(--sans); transition: all 0.12s;
+}
+.btn-del:hover { background: var(--red-b); }
 
 /* Loading / status */
 .load-row { text-align: center; padding: 32px; color: var(--text3); font-size: 13px; }
@@ -390,12 +396,12 @@ tr:hover td { background: var(--bg3); }
 <!-- ── NAV ── -->
 <nav class="nav">
   <div class="nav-logo">
-    <div class="nav-logo-icon">🏗</div>
+    <div class="nav-logo-icon">⊞</div>
     지게차 QR 관리
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('worker',this)">📱 작업자</button>
-    <button class="nav-tab" onclick="showPage('admin',this)">🖥 관리자</button>
+    <button class="nav-tab active" onclick="showPage('worker',this)">◉ 작업자</button>
+    <button class="nav-tab" onclick="showPage('admin',this)">▣ 관리자</button>
   </div>
 </nav>
 
@@ -465,8 +471,8 @@ tr:hover td { background: var(--bg3); }
         </div>
       </div>
 
-      <div class="sending-msg" id="sending-start">⏳ 서버에 기록 중...</div>
-      <button class="btn-start" id="btn-start" onclick="handleStart()">▶ 작업 시작</button>
+      <div class="sending-msg" id="sending-start">· 서버에 기록 중...</div>
+      <button class="btn-start" id="btn-start" onclick="handleStart()">▷ 작업 시작</button>
     </div>
 
     <!-- 종료 섹션 -->
@@ -475,8 +481,8 @@ tr:hover td { background: var(--bg3); }
         <h3>진행 중인 작업</h3>
         <div class="end-info" id="end-detail"></div>
       </div>
-      <div class="sending-msg" id="sending-end">⏳ 서버에 기록 중...</div>
-      <button class="btn-end" onclick="handleEnd()">⬛ 작업 종료</button>
+      <div class="sending-msg" id="sending-end">· 서버에 기록 중...</div>
+      <button class="btn-end" onclick="handleEnd()">■ 작업 종료</button>
     </div>
   </div>
 </div>
@@ -487,7 +493,7 @@ tr:hover td { background: var(--bg3); }
   <!-- 잠금 화면 -->
   <div id="admin-lock">
     <div class="lock-wrap">
-      <div class="lock-icon">🔐</div>
+      <div class="lock-icon">▣</div>
       <h2>관리자 전용</h2>
       <p>비밀번호를 입력해 주세요</p>
       <div class="lock-input-wrap">
@@ -510,8 +516,8 @@ tr:hover td { background: var(--bg3); }
         </div>
         <div class="admin-actions">
           <button class="btn-sm btn-refresh" onclick="loadAdminData()">↺ 새로고침</button>
-          <button class="btn-sm btn-export" onclick="exportCSV()">📥 CSV</button>
-          <button class="btn-sm btn-lock" onclick="lockAdmin()">🔒 잠금</button>
+          <button class="btn-sm btn-export" onclick="exportCSV()">↓ CSV</button>
+          <button class="btn-sm btn-lock" onclick="lockAdmin()">× 잠금</button>
         </div>
       </div>
 
@@ -520,7 +526,7 @@ tr:hover td { background: var(--bg3); }
         <div class="stat-card">
           <div class="stat-label">전체 지게차</div>
           <div class="stat-val">9</div>
-          <div class="stat-sub">FL-01 ~ FL-09</div>
+          <div class="stat-sub">6710 ~ 6599</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">현재 가동 중</div>
@@ -537,6 +543,11 @@ tr:hover td { background: var(--bg3); }
           <div class="stat-val slate" id="s-hours">-</div>
           <div class="stat-sub">완료 기준</div>
         </div>
+        <div class="stat-card" style="grid-column:span 2">
+          <div class="stat-label">오늘 총 청구 금액</div>
+          <div class="stat-val" id="s-price" style="font-size:20px">-</div>
+          <div class="stat-sub">완료된 작업 기준</div>
+        </div>
       </div>
 
       <!-- FL mini grid -->
@@ -544,7 +555,7 @@ tr:hover td { background: var(--bg3); }
 
       <!-- Script 미설정 경고 -->
       <div class="script-warn" id="script-warn" style="display:none">
-        ⚠️ Apps Script URL이 설정되지 않았습니다. 코드 상단 <code>SCRIPT_URL</code> 변수를 설정해 주세요.
+        ! Apps Script URL이 설정되지 않았습니다. 코드 상단 <code>SCRIPT_URL</code> 변수를 설정해 주세요.
         아래 테이블은 로컬 임시 데이터입니다.
       </div>
 
@@ -569,11 +580,11 @@ tr:hover td { background: var(--bg3); }
           <thead>
             <tr>
               <th>호기</th><th>담당자</th><th>부서</th><th>호선</th><th>이용사유</th>
-              <th>시작</th><th>종료</th><th>이용시간</th><th>상태</th><th>비고</th>
+              <th>시작</th><th>종료</th><th>이용시간</th><th>청구시간</th><th>금액</th><th>상태</th><th>비고</th><th></th>
             </tr>
           </thead>
           <tbody id="log-tbody">
-            <tr><td colspan="9" class="load-row">데이터 불러오는 중...</td></tr>
+            <tr><td colspan="13" class="load-row">데이터 불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -623,12 +634,30 @@ tr:hover td { background: var(--bg3); }
 // ════════════════════════════════════════
 //  ★ 설정 — 여기만 바꾸면 됩니다
 // ════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTyVCA8s8x0imRgI1q_byOFE2cAXrV_f8Drhgc8zmuQr6uXwwl5LKF8oNoTXRFWntjvw/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
+const SCRIPT_URL = '';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
 const ADMIN_PW   = '1234';   // 관리자 비밀번호
 // ════════════════════════════════════════
 
 const FLS = ['6710','5419','8328','7027','6527','8108','6427','7927','6599'];
 const FL_TONS = {'6710':'25톤','5419':'20톤','8328':'16톤','7027':'5톤','6527':'5톤','8108':'7톤','6427':'7톤','7927':'7톤','6599':'7톤'};
+const FL_RATE = {'6710':330000,'5419':180000,'8328':140000,'7027':60000,'6527':60000,'8108':60000,'6427':60000,'7927':60000,'6599':60000};
+
+// 40분 단위 시간 계산: 매 40분마다 1시간으로 올림
+function calcBilledHours(ms) {
+  const totalMin = ms / 60000;
+  return Math.ceil(totalMin / 40);
+}
+
+// 단가 계산
+function calcPrice(fl, ms) {
+  const rate = FL_RATE[fl] || 0;
+  const hours = calcBilledHours(ms);
+  return rate * hours;
+}
+
+function fmtPrice(n) {
+  return n.toLocaleString('ko-KR') + '원';
+}
 let selFL = null, selReason = null;
 let sessions = JSON.parse(localStorage.getItem('fl-sess') || '{}');
 let logs     = JSON.parse(localStorage.getItem('fl-logs') || '[]');
@@ -766,6 +795,7 @@ async function confirmEnd() {
   const s   = sessions[fl];
   const elapsed = now.getTime() - s.startMs;
   const log = { ...s, endMs: now.getTime(), endStr: fmtTime(now), elapsedMs: elapsed, date: now.toLocaleDateString('ko-KR') };
+  log.id = log.startMs + '_' + fl;
   logs.unshift(log);
   delete sessions[fl];
   save();
@@ -850,7 +880,7 @@ async function loadAdminData() {
     return;
   }
   document.getElementById('script-warn').style.display = 'none';
-  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="9" class="load-row">불러오는 중...</td></tr>';
+  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="13" class="load-row">불러오는 중...</td></tr>';
   try {
     const data = await fetchJSONP(SCRIPT_URL + '?action=get&callback=__cb__');
     adminRows = data.rows || [];
@@ -884,7 +914,7 @@ function buildLocalRows() {
       note:s.note, status:'on', startMs:s.startMs });
   });
   logs.forEach(l => {
-    rows.push({ fl:l.fl, name:l.name, dept:l.dept, reason:l.reason,
+    rows.push({ id:l.id||l.startMs+'_'+l.fl, fl:l.fl, name:l.name, dept:l.dept, vessel:l.vessel||'', reason:l.reason,
       startStr:l.startStr, endStr:l.endStr, elapsedMs:l.elapsedMs,
       note:l.note, status:'done', startMs:l.startMs, date:l.date });
   });
@@ -896,9 +926,11 @@ function updateStats(rows) {
   const onCount = Object.keys(sessions).length;
   const todayDone = rows.filter(r => r.status==='done' && r.date===today);
   const totalMin  = todayDone.reduce((a,r) => a + Math.round((r.elapsedMs||0)/60000), 0);
+  const totalPrice = todayDone.reduce((a,r) => a + calcPrice(r.fl, r.elapsedMs||0), 0);
   document.getElementById('s-active').textContent = onCount;
   document.getElementById('s-today').textContent  = todayDone.length + onCount;
   document.getElementById('s-hours').textContent  = `${Math.floor(totalMin/60)}h ${totalMin%60}m`;
+  document.getElementById('s-price').textContent  = fmtPrice(totalPrice);
 }
 
 function renderFLMini() {
@@ -919,7 +951,17 @@ function renderTable() {
   const flf = document.getElementById('f-fl').value;
   const sf  = document.getElementById('f-status').value;
 
-  let rows = buildLocalRows().filter(r => {
+  // 시트에서 불러온 데이터가 있으면 우선 사용, 없으면 로컬
+  const source = (adminRows && adminRows.length) ? adminRows : buildLocalRows();
+  // 진행 중 세션은 항상 로컬에서 추가
+  const onRows = Object.values(sessions).map(s => ({
+    id: s.rowId, fl:s.fl, name:s.name, dept:s.dept, vessel:s.vessel||'', reason:s.reason,
+    startStr:s.startStr, endStr:'-', elapsedMs: Date.now()-s.startMs,
+    note:s.note, status:'on', startMs:s.startMs
+  }));
+  const combined = [...onRows, ...source.filter(r => r.status === 'done')];
+
+  let rows = combined.filter(r => {
     if (nf  && !r.name.toLowerCase().includes(nf)) return false;
     if (flf && r.fl !== flf) return false;
     if (sf  && r.status !== sf) return false;
@@ -928,31 +970,47 @@ function renderTable() {
 
   const tbody = document.getElementById('log-tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty">기록이 없습니다</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" class="empty">기록이 없습니다</td></tr>';
     return;
   }
-  tbody.innerHTML = rows.map(r => `
+  tbody.innerHTML = rows.map((r,i) => {
+    const bHours = r.status==='done' ? calcBilledHours(r.elapsedMs||0) : '-';
+    const price  = r.status==='done' ? fmtPrice(calcPrice(r.fl, r.elapsedMs||0)) : '-';
+    return `
     <tr>
-      <td><span class="fl-tag">${r.fl}</span></td>
+      <td><span class="fl-tag">${r.fl}</span><br><span style="font-size:10px;color:var(--text3)">${FL_TONS[r.fl]||''}</span></td>
       <td>${r.name}</td>
       <td style="color:var(--text2)">${r.dept||'-'}</td>
       <td style="color:var(--text2)">${r.vessel||'-'}</td>
       <td>${r.reason}</td>
       <td class="mono">${r.startStr}</td>
       <td class="mono" style="color:var(--text2)">${r.endStr||'-'}</td>
-      <td class="mono" style="color:${r.status==='on'?'var(--green)':'var(--text2)'}">
-        ${fmtElapsed(r.elapsedMs||0)}</td>
+      <td class="mono" style="color:${r.status==='on'?'var(--green)':'var(--text2)'}">${fmtElapsed(r.elapsedMs||0)}</td>
+      <td class="mono" style="color:var(--blue);font-weight:500">${bHours === '-' ? '-' : bHours+'h'}</td>
+      <td class="mono" style="color:var(--text);font-weight:500">${price}</td>
       <td><span class="badge ${r.status==='on'?'badge-on':'badge-done'}">${r.status==='on'?'진행 중':'완료'}</span></td>
       <td style="color:var(--text3);font-size:12px">${r.note||'-'}</td>
-    </tr>`).join('');
+      <td>${r.status==='done' ? `<button class="btn-del" onclick="deleteLog('${r.id||''}','${r.fl}','${r.startStr}')">삭제</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function deleteLog(id, fl, startStr) {
+  if (!confirm(`[${fl}] ${startStr} 기록을 삭제할까요?`)) return;
+  logs = logs.filter(l => (l.id||l.startMs+'_'+l.fl) !== id);
+  save();
+  renderTable();
+  updateStats(buildLocalRows());
 }
 
 function exportCSV() {
   const rows = buildLocalRows();
-  const hd = ['호기','담당자','부서','호선','이용사유','시작','종료','이용시간(분)','상태','비고'];
+  const hd = ['호기','톤수','담당자','부서','호선','이용사유','시작','종료','이용시간(분)','청구시간(h)','금액(원)','상태','비고'];
   const body = rows.map(r => [
-    r.fl, r.name, r.dept||'', r.vessel||'', r.reason, r.startStr, r.endStr||'',
+    r.fl, FL_TONS[r.fl]||'', r.name, r.dept||'', r.vessel||'', r.reason, r.startStr, r.endStr||'',
     Math.round((r.elapsedMs||0)/60000),
+    r.status==='done'?calcBilledHours(r.elapsedMs||0):'',
+    r.status==='done'?calcPrice(r.fl,r.elapsedMs||0):'',
     r.status==='on'?'진행중':'완료', r.note||''
   ].join(','));
   const csv = [hd.join(','), ...body].join('\n');
@@ -986,7 +1044,7 @@ setInterval(() => {
 // 샘플 데이터 (첫 실행시)
 if (!logs.length) {
   const now = Date.now();
-  [['FL-03','김철수','물류팀','화물 하역'],['FL-07','이영희','생산팀','자재 운반']].forEach(([fl,name,dept,reason],i)=>{
+  [['6710','김철수','물류팀','화물 하역'],['8108','이영희','생산팀','자재 운반']].forEach(([fl,name,dept,reason],i)=>{
     const start = now-(i+1)*5400000, dur=2700000+i*900000;
     logs.push({ fl,name,dept,reason,note:'',
       startMs:start, startStr:fmtTime(new Date(start)),
