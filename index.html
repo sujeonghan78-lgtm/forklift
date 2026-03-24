@@ -439,26 +439,31 @@ tr:hover td { background: var(--bg3); }
         <div class="form-group">
           <label class="form-label">부서</label>
           <select class="form-select" id="inp-dept">
-            <option value="">선택 안함</option>
-            <option>물류팀</option><option>생산팀</option>
-            <option>유지보수팀</option><option>안전팀</option>
+            <option value="">선택하세요 *</option>
+            <option>물류</option><option>자재</option>
+            <option>생산</option><option>기타</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">호선 *</label>
-          <input class="form-input" id="inp-vessel" type="text" placeholder="예: 1234호">
+          <label class="form-label">시스템 *</label>
+          <select class="form-select" id="inp-system">
+            <option value="">선택하세요 *</option>
+            <option>ECS</option><option>BWTS</option>
+            <option>TLGS</option><option>기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">호선</label>
+          <input class="form-input" id="inp-vessel" type="text" placeholder="예: 1234">
         </div>
       </div>
 
       <div class="form-card">
         <h3>이용 사유 *</h3>
         <div class="reason-chips" id="reason-chips">
-          <button class="reason-chip" onclick="pickReason(this)">화물 하역</button>
+          <button class="reason-chip" onclick="pickReason(this)">자재 상하차</button>
           <button class="reason-chip" onclick="pickReason(this)">창고 이동</button>
           <button class="reason-chip" onclick="pickReason(this)">자재 운반</button>
-          <button class="reason-chip" onclick="pickReason(this)">적재 작업</button>
-          <button class="reason-chip" onclick="pickReason(this)">정기 점검</button>
-          <button class="reason-chip" onclick="pickReason(this)">긴급 출동</button>
           <button class="reason-chip" onclick="pickReason(this)">기타</button>
         </div>
         <div class="form-group" style="margin-top:12px">
@@ -579,12 +584,12 @@ tr:hover td { background: var(--bg3); }
         <table>
           <thead>
             <tr>
-              <th>호기</th><th>담당자</th><th>부서</th><th>호선</th><th>이용사유</th>
+              <th>호기</th><th>담당자</th><th>부서</th><th>시스템</th><th>호선</th><th>이용사유</th>
               <th>시작</th><th>종료</th><th>이용시간</th><th>청구시간</th><th>금액</th><th>상태</th><th>비고</th><th></th>
             </tr>
           </thead>
           <tbody id="log-tbody">
-            <tr><td colspan="13" class="load-row">데이터 불러오는 중...</td></tr>
+            <tr><td colspan="14" class="load-row">데이터 불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -601,6 +606,7 @@ tr:hover td { background: var(--bg3); }
       <div class="mrow"><span>지게차</span><span id="mc-fl">-</span></div>
       <div class="mrow"><span>담당자</span><span id="mc-name">-</span></div>
       <div class="mrow"><span>부서</span><span id="mc-dept">-</span></div>
+      <div class="mrow"><span>시스템</span><span id="mc-system">-</span></div>
       <div class="mrow"><span>호선</span><span id="mc-vessel">-</span></div>
       <div class="mrow"><span>이용사유</span><span id="mc-reason">-</span></div>
       <div class="mrow"><span>시작 시각</span><span id="mc-time">-</span></div>
@@ -634,7 +640,7 @@ tr:hover td { background: var(--bg3); }
 // ════════════════════════════════════════
 //  ★ 설정 — 여기만 바꾸면 됩니다
 // ════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1WLG9u2s9KQhvO_E5ZhPnPTWdYsmMMVdeJi5dmaaNiuqL_VvWsbHRapPo-qoUmj7Dwg/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw66jic4kzkJAy-Zlia2RFIj4ZqpXFDcf7GzlU0XQYGMyhNFaMric8AXSGsmgmVLScFow/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
 const ADMIN_PW   = '1234';   // 관리자 비밀번호
 // ════════════════════════════════════════
 
@@ -724,8 +730,9 @@ function handleStart() {
   if (!selFL) return alert('호기를 선택하세요.');
   const name = document.getElementById('inp-name').value.trim();
   if (!name) return alert('담당자 이름을 입력하세요.');
+  const system = document.getElementById('inp-system').value.trim();
+  if (!system) return alert('시스템을 선택하세요.');
   const vessel = document.getElementById('inp-vessel').value.trim();
-  if (!vessel) return alert('호선을 입력하세요.');
   const custom = document.getElementById('inp-reason-custom').value.trim();
   const finalReason = custom || selReason;
   if (!finalReason) return alert('이용 사유를 선택하거나 직접 입력하세요.');
@@ -733,7 +740,8 @@ function handleStart() {
   document.getElementById('mc-fl').textContent     = selFL;
   document.getElementById('mc-name').textContent   = name;
   document.getElementById('mc-dept').textContent   = document.getElementById('inp-dept').value || '미지정';
-  document.getElementById('mc-vessel').textContent = vessel + '호선';
+  document.getElementById('mc-system').textContent = system;
+  document.getElementById('mc-vessel').textContent = vessel || '-';
   document.getElementById('mc-reason').textContent = finalReason;
   document.getElementById('mc-time').textContent   = fmtTime(now);
   document.getElementById('m-start').classList.add('open');
@@ -746,7 +754,8 @@ async function confirmStart() {
   const s = {
     fl: selFL,
     name: document.getElementById('inp-name').value.trim(),
-    dept: document.getElementById('inp-dept').value || '미지정',
+    dept: document.getElementById('inp-dept').value || '',
+    system: document.getElementById('inp-system').value,
     vessel: document.getElementById('inp-vessel').value.trim(),
     reason: custom || selReason,
     note: document.getElementById('inp-note').value.trim(),
@@ -760,6 +769,7 @@ async function confirmStart() {
   // 폼 초기화
   document.getElementById('inp-name').value = '';
   document.getElementById('inp-dept').value = '';
+  document.getElementById('inp-system').value = '';
   document.getElementById('inp-vessel').value = '';
   document.getElementById('inp-reason-custom').value = '';
   document.getElementById('inp-note').value = '';
@@ -770,7 +780,7 @@ async function confirmStart() {
   if (SCRIPT_URL) {
     showSending('sending-start', true);
     try {
-      await postToSheet({ action: 'start', ...s });
+      await postToSheet({ action: 'start', rowId:s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', vessel:s.vessel||'', reason:s.reason, startStr:s.startStr, note:s.note||'' });
     } catch(e) { console.warn('시트 전송 실패:', e); }
     showSending('sending-start', false);
   }
@@ -881,7 +891,7 @@ async function loadAdminData() {
     return;
   }
   document.getElementById('script-warn').style.display = 'none';
-  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="13" class="load-row">불러오는 중...</td></tr>';
+  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="14" class="load-row">불러오는 중...</td></tr>';
   try {
     const data = await fetchJSONP(SCRIPT_URL + '?action=get&callback=__cb__');
     adminRows = data.rows || [];
@@ -915,7 +925,7 @@ function buildLocalRows() {
       note:s.note, status:'on', startMs:s.startMs });
   });
   logs.forEach(l => {
-    rows.push({ id:l.id||l.startMs+'_'+l.fl, fl:l.fl, name:l.name, dept:l.dept, vessel:l.vessel||'', reason:l.reason,
+    rows.push({ id:l.id||l.startMs+'_'+l.fl, fl:l.fl, name:l.name, dept:l.dept, system:l.system||'', vessel:l.vessel||'', reason:l.reason,
       startStr:l.startStr, endStr:l.endStr, elapsedMs:l.elapsedMs,
       note:l.note, status:'done', startMs:l.startMs, date:l.date });
   });
@@ -956,7 +966,7 @@ function renderTable() {
   const source = (adminRows && adminRows.length) ? adminRows : buildLocalRows();
   // 진행 중 세션은 항상 로컬에서 추가
   const onRows = Object.values(sessions).map(s => ({
-    id: s.rowId, fl:s.fl, name:s.name, dept:s.dept, vessel:s.vessel||'', reason:s.reason,
+    id: s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', vessel:s.vessel||'', reason:s.reason,
     startStr:s.startStr, endStr:'-', elapsedMs: Date.now()-s.startMs,
     note:s.note, status:'on', startMs:s.startMs
   }));
@@ -971,7 +981,7 @@ function renderTable() {
 
   const tbody = document.getElementById('log-tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="13" class="empty">기록이 없습니다</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" class="empty">기록이 없습니다</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map((r,i) => {
@@ -982,7 +992,8 @@ function renderTable() {
       <td><span class="fl-tag">${r.fl}</span><br><span style="font-size:10px;color:var(--text3)">${FL_TONS[r.fl]||''}</span></td>
       <td>${r.name}</td>
       <td style="color:var(--text2)">${r.dept||'-'}</td>
-      <td style="color:var(--text2)">${r.vessel||'-'}</td>
+      <td style="color:var(--text2)">${r.system||''}</td>
+      <td style="color:var(--text2)">${r.vessel||''}</td>
       <td>${r.reason}</td>
       <td class="mono">${r.startStr}</td>
       <td class="mono" style="color:var(--text2)">${r.endStr||'-'}</td>
@@ -1006,9 +1017,9 @@ function deleteLog(id, fl, startStr) {
 
 function exportCSV() {
   const rows = buildLocalRows();
-  const hd = ['호기','톤수','담당자','부서','호선','이용사유','시작','종료','이용시간(분)','청구시간(h)','금액(원)','상태','비고'];
+  const hd = ['호기','톤수','담당자','부서','시스템','호선','이용사유','시작','종료','이용시간(분)','청구시간(h)','금액(원)','상태','비고'];
   const body = rows.map(r => [
-    r.fl, FL_TONS[r.fl]||'', r.name, r.dept||'', r.vessel||'', r.reason, r.startStr, r.endStr||'',
+    r.fl, FL_TONS[r.fl]||'', r.name, r.dept||'', r.system||'', r.vessel||'', r.reason, r.startStr, r.endStr||'',
     Math.round((r.elapsedMs||0)/60000),
     r.status==='done'?calcBilledHours(r.elapsedMs||0):'',
     r.status==='done'?calcPrice(r.fl,r.elapsedMs||0):'',
