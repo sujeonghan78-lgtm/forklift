@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지게차 QR 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f8faff;
+  --bg2:      #ffffff;
+  --bg3:      #f0f4ff;
+  --blue:     #2563eb;
+  --blue-l:   #3b82f6;
+  --blue-xl:  #eff6ff;
+  --blue-b:   #1d4ed8;
+  --border:   #e2e8f0;
+  --border2:  #cbd5e1;
+  --text:     #0f172a;
+  --text2:    #475569;
+  --text3:    #94a3b8;
+  --green:    #16a34a;
+  --green-bg: #f0fdf4;
+  --green-b:  #dcfce7;
+  --red:      #dc2626;
+  --red-bg:   #fef2f2;
+  --red-b:    #fecaca;
+  --shadow:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-m: 0 4px 16px rgba(37,99,235,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  --sans: 'Noto Sans KR', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --radius: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+/* ── NAV ── */
+.nav {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 54px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: var(--shadow);
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 9px;
+  font-weight: 600; font-size: 15px; color: var(--blue);
+  letter-spacing: -0.01em;
+}
+.nav-logo-icon {
+  width: 30px; height: 30px;
+  background: var(--blue); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.nav-tabs { display: flex; gap: 4px; }
+.nav-tab {
+  padding: 6px 14px; border-radius: 7px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none;
+  background: transparent; color: var(--text2);
+  transition: all 0.15s; font-family: var(--sans);
+}
+.nav-tab:hover { background: var(--bg3); color: var(--text); }
+.nav-tab.active { background: var(--blue-xl); color: var(--blue); }
+
+/* ── PAGES ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ══════════════════════════════
+   WORKER PAGE
+══════════════════════════════ */
+.worker-wrap { max-width: 460px; margin: 0 auto; padding: 28px 20px 48px; }
+
+.worker-header { text-align: center; margin-bottom: 24px; }
+.worker-header h1 { font-size: 20px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
+.worker-header p { font-size: 13px; color: var(--text2); }
+
+/* Info tip */
+.tip {
+  background: var(--blue-xl); border: 1px solid #bfdbfe;
+  border-radius: 8px; padding: 9px 13px;
+  font-size: 12px; color: var(--blue); margin-bottom: 20px;
+}
+
+/* FL grid */
+.fl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 24px; }
+.fl-card {
+  background: var(--bg2); border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 14px 10px;
+  cursor: pointer; text-align: center;
+  transition: all 0.15s; position: relative;
+  box-shadow: var(--shadow);
+}
+.fl-card:hover { border-color: var(--blue-l); box-shadow: var(--shadow-m); }
+.fl-card.selected { border-color: var(--blue); background: var(--blue-xl); box-shadow: var(--shadow-m); }
+.fl-card.in-use { border-color: #86efac; background: var(--green-bg); }
+.fl-num {
+  font-family: var(--mono); font-size: 18px; font-weight: 500;
+  color: var(--blue); margin-bottom: 3px;
+}
+.fl-card.in-use .fl-num { color: var(--green); }
+.fl-card.selected .fl-num { color: var(--blue-b); }
+.fl-label { font-size: 11px; color: var(--text3); }
+.fl-card.in-use .fl-label { color: var(--green); }
+.fl-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  position: absolute; top: 8px; right: 8px;
+  background: var(--border2);
+}
+.fl-card.in-use .fl-dot { background: var(--green); box-shadow: 0 0 5px #4ade80; }
+.fl-card.selected .fl-dot { background: var(--blue); }
+
+/* Active banner */
+.active-banner {
+  display: none;
+  background: var(--green-bg); border: 1px solid #bbf7d0;
+  border-radius: var(--radius); padding: 13px 16px;
+  margin-bottom: 16px; align-items: center; justify-content: space-between;
+}
+.active-banner.visible { display: flex; }
+.banner-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); animation: pulse 1.4s ease-in-out infinite; margin-right: 10px; flex-shrink: 0; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+.banner-text { font-size: 13px; color: var(--text); }
+.banner-text strong { color: var(--green); }
+.banner-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.banner-timer { font-family: var(--mono); font-size: 15px; font-weight: 500; color: var(--green); }
+
+/* Form sections */
+.form-section { display: none; }
+.form-section.visible { display: block; }
+.form-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px;
+  margin-bottom: 12px; box-shadow: var(--shadow);
+}
+.form-card h3 {
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin-bottom: 14px;
+}
+.form-group { margin-bottom: 12px; }
+.form-group:last-child { margin-bottom: 0; }
+.form-label { font-size: 12px; color: var(--text2); margin-bottom: 5px; display: block; font-weight: 500; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 9px 12px; font-size: 14px; color: var(--text);
+  font-family: var(--sans); outline: none;
+  appearance: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--blue-l);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  background: #fff;
+}
+.form-textarea { resize: vertical; min-height: 66px; }
+.form-select option { background: #fff; }
+
+.reason-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.reason-chip {
+  padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--text2); cursor: pointer; transition: all 0.12s;
+  font-family: var(--sans);
+}
+.reason-chip:hover { border-color: var(--blue-l); color: var(--blue); }
+.reason-chip.active { border-color: var(--blue); background: var(--blue-xl); color: var(--blue); }
+
+/* Buttons */
+.btn-start {
+  width: 100%; padding: 15px;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-size: 15px; font-weight: 600; font-family: var(--sans);
+  cursor: pointer; transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+}
+.btn-start:hover { background: var(--blue-b); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(37,99,235,0.3); }
+.btn-start:active { transform: translateY(0); }
+.btn-start:disabled { background: var(--border2); box-shadow: none; cursor: not-allowed; }
+.btn-end {
+  width: 100%; padding: 15px;
+  background: var(--red-bg); color: var(--red);
+  border: 1.5px solid #fca5a5; border-radius: var(--radius);
+  font-size: 15px; font-weight: 600; font-family: var(--sans);
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-end:hover { background: var(--red-b); border-color: var(--red); }
+
+/* End section */
+.end-info { font-size: 13px; line-height: 2; color: var(--text2); }
+.end-info strong { color: var(--text); }
+
+/* Sending overlay */
+.sending-msg {
+  display: none; text-align: center; padding: 12px;
+  font-size: 13px; color: var(--blue);
+}
+.sending-msg.visible { display: block; }
+
+/* ══════════════════════════════
+   ADMIN LOCK
+══════════════════════════════ */
+.lock-wrap {
+  max-width: 340px; margin: 80px auto; padding: 0 20px;
+  text-align: center;
+}
+.lock-icon { font-size: 36px; margin-bottom: 16px; }
+.lock-wrap h2 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+.lock-wrap p { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+.lock-input-wrap { display: flex; gap: 8px; margin-bottom: 10px; }
+.lock-input {
+  flex: 1; background: var(--bg2); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 11px 14px;
+  font-size: 15px; color: var(--text); font-family: var(--sans);
+  outline: none; transition: border-color 0.15s;
+  letter-spacing: 0.1em;
+}
+.lock-input:focus { border-color: var(--blue-l); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.lock-input.error { border-color: var(--red); }
+.btn-unlock {
+  padding: 11px 20px; background: var(--blue); color: #fff;
+  border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: var(--sans);
+  transition: background 0.15s;
+}
+.btn-unlock:hover { background: var(--blue-b); }
+.lock-error { font-size: 12px; color: var(--red); height: 16px; }
+.lock-hint { font-size: 11px; color: var(--text3); margin-top: 20px; }
+
+/* ══════════════════════════════
+   ADMIN DASHBOARD
+══════════════════════════════ */
+.admin-inner { display: none; }
+.admin-inner.unlocked { display: block; }
+
+.admin-wrap { padding: 28px 32px 48px; max-width: 1100px; }
+.admin-top {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; margin-bottom: 24px; gap: 12px;
+}
+.admin-top h1 { font-size: 20px; font-weight: 600; }
+.admin-top p { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.admin-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.btn-sm {
+  padding: 8px 14px; border-radius: 8px;
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  font-family: var(--sans); transition: all 0.12s; border: none;
+}
+.btn-refresh { background: var(--blue-xl); color: var(--blue); }
+.btn-refresh:hover { background: #dbeafe; }
+.btn-export { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+.btn-export:hover { border-color: var(--blue-l); color: var(--blue); }
+.btn-lock { background: transparent; color: var(--text3); border: 1px solid var(--border); }
+.btn-lock:hover { border-color: var(--border2); color: var(--text2); }
+
+/* Stats */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; font-weight: 600; }
+.stat-val { font-family: var(--mono); font-size: 26px; font-weight: 500; color: var(--blue); }
+.stat-val.green { color: var(--green); }
+.stat-val.slate { color: var(--text); font-size: 20px; }
+.stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* FL mini status */
+.fl-status-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 7px; margin-bottom: 24px; }
+.fl-sc {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px 6px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.fl-sc.on { border-color: #86efac; background: var(--green-bg); }
+.fl-sc-num { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 2px; }
+.fl-sc.on .fl-sc-num { color: var(--green); }
+.fl-sc-state { font-size: 9px; color: var(--text3); }
+.fl-sc.on .fl-sc-state { color: var(--green); }
+
+/* Filter row */
+.filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.fi {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 11px;
+  font-size: 13px; color: var(--text); font-family: var(--sans);
+  outline: none; appearance: none;
+  transition: border-color 0.15s;
+}
+.fi:focus { border-color: var(--blue-l); }
+.fi-name { width: 150px; }
+
+/* Table */
+.table-wrap {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow);
+}
+table { width: 100%; border-collapse: collapse; }
+th {
+  background: var(--bg3); padding: 10px 14px;
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  text-align: left; text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); }
+.badge {
+  display: inline-block; padding: 2px 9px;
+  border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.badge-on { background: var(--green-bg); color: var(--green); border: 1px solid #86efac; }
+.badge-done { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+.mono { font-family: var(--mono); font-size: 12px; }
+.fl-tag { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--blue); }
+.empty { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+
+/* Loading / status */
+.load-row { text-align: center; padding: 32px; color: var(--text3); font-size: 13px; }
+.script-warn {
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 8px; padding: 11px 14px; margin-bottom: 16px;
+  font-size: 12px; color: #92400e;
+}
+
+/* ══════════════════════════════
+   MODAL
+══════════════════════════════ */
+.modal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(15,23,42,0.45); z-index: 200;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 26px; width: 100%; max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  animation: mIn 0.2s ease;
+}
+@keyframes mIn { from{opacity:0;transform:scale(0.96) translateY(6px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.modal > p { font-size: 13px; color: var(--text2); margin-bottom: 18px; }
+.minfo {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 13px 15px; margin-bottom: 18px;
+}
+.mrow { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+.mrow span:first-child { color: var(--text2); }
+.mrow span:last-child { font-weight: 500; }
+.mbtns { display: flex; gap: 9px; }
+.btn-cancel {
+  flex: 1; padding: 11px; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: 13px; color: var(--text2); cursor: pointer;
+  font-family: var(--sans); transition: all 0.12s;
+}
+.btn-cancel:hover { border-color: var(--border2); color: var(--text); }
+.btn-confirm {
+  flex: 2; padding: 11px; background: var(--blue); color: #fff;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: var(--sans); transition: background 0.15s;
+}
+.btn-confirm:hover { background: var(--blue-b); }
+.btn-confirm-end {
+  flex: 2; padding: 11px; background: var(--red-bg); color: var(--red);
+  border: 1.5px solid #fca5a5; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: var(--sans);
+}
+.btn-confirm-end:hover { background: var(--red-b); }
+
+@media (max-width: 640px) {
+  .stats-row { grid-template-columns: repeat(2,1fr); }
+  .fl-status-grid { grid-template-columns: repeat(3,1fr); }
+  .admin-wrap { padding: 18px 14px 40px; }
+  .fi-name { width: 110px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">🏗</div>
+    지게차 QR 관리
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('worker',this)">📱 작업자</button>
+    <button class="nav-tab" onclick="showPage('admin',this)">🖥 관리자</button>
+  </div>
+</nav>
+
+<!-- ══════════════ WORKER ══════════════ -->
+<div id="page-worker" class="page active">
+  <div class="worker-wrap">
+    <div class="worker-header">
+      <h1>지게차 선택</h1>
+      <p>작업할 호기를 선택해 주세요</p>
+    </div>
+
+    <div class="tip">💡 실제 운용 시 QR 스캔 → 해당 호기 자동 선택됩니다</div>
+
+    <div class="fl-grid" id="fl-grid"></div>
+
+    <!-- 진행 중 배너 -->
+    <div class="active-banner" id="active-banner">
+      <div style="display:flex;align-items:center;flex:1">
+        <div class="banner-dot"></div>
+        <div>
+          <div class="banner-text"><strong id="bn-fl">FL-01</strong> 작업 진행 중</div>
+          <div class="banner-sub" id="bn-info"></div>
+        </div>
+      </div>
+      <div class="banner-timer" id="bn-timer">00:00</div>
+    </div>
+
+    <!-- 시작 폼 -->
+    <div class="form-section" id="form-section">
+      <div class="form-card">
+        <h3>담당자 정보</h3>
+        <div class="form-group">
+          <label class="form-label">이름 *</label>
+          <input class="form-input" id="inp-name" type="text" placeholder="홍길동">
+        </div>
+        <div class="form-group">
+          <label class="form-label">부서</label>
+          <select class="form-select" id="inp-dept">
+            <option value="">선택 안함</option>
+            <option>물류팀</option><option>생산팀</option>
+            <option>유지보수팀</option><option>안전팀</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h3>이용 사유 *</h3>
+        <div class="reason-chips" id="reason-chips">
+          <button class="reason-chip" onclick="pickReason(this)">화물 하역</button>
+          <button class="reason-chip" onclick="pickReason(this)">창고 이동</button>
+          <button class="reason-chip" onclick="pickReason(this)">자재 운반</button>
+          <button class="reason-chip" onclick="pickReason(this)">적재 작업</button>
+          <button class="reason-chip" onclick="pickReason(this)">정기 점검</button>
+          <button class="reason-chip" onclick="pickReason(this)">긴급 출동</button>
+          <button class="reason-chip" onclick="pickReason(this)">기타</button>
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label class="form-label">비고 (선택)</label>
+          <textarea class="form-textarea" id="inp-note" placeholder="추가 메모..."></textarea>
+        </div>
+      </div>
+
+      <div class="sending-msg" id="sending-start">⏳ 서버에 기록 중...</div>
+      <button class="btn-start" id="btn-start" onclick="handleStart()">▶ 작업 시작</button>
+    </div>
+
+    <!-- 종료 섹션 -->
+    <div class="form-section" id="end-section">
+      <div class="form-card">
+        <h3>진행 중인 작업</h3>
+        <div class="end-info" id="end-detail"></div>
+      </div>
+      <div class="sending-msg" id="sending-end">⏳ 서버에 기록 중...</div>
+      <button class="btn-end" onclick="handleEnd()">⬛ 작업 종료</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ ADMIN ══════════════ -->
+<div id="page-admin" class="page">
+
+  <!-- 잠금 화면 -->
+  <div id="admin-lock">
+    <div class="lock-wrap">
+      <div class="lock-icon">🔐</div>
+      <h2>관리자 전용</h2>
+      <p>비밀번호를 입력해 주세요</p>
+      <div class="lock-input-wrap">
+        <input class="lock-input" id="pw-input" type="password"
+          placeholder="••••••" onkeydown="if(event.key==='Enter')tryUnlock()">
+        <button class="btn-unlock" onclick="tryUnlock()">확인</button>
+      </div>
+      <div class="lock-error" id="lock-error"></div>
+      <div class="lock-hint">기본 비밀번호: <code>1234</code><br>코드 상단 ADMIN_PW 변수에서 변경하세요</div>
+    </div>
+  </div>
+
+  <!-- 대시보드 -->
+  <div id="admin-inner" class="admin-inner">
+    <div class="admin-wrap">
+      <div class="admin-top">
+        <div>
+          <h1>관리자 대시보드</h1>
+          <p id="admin-date"></p>
+        </div>
+        <div class="admin-actions">
+          <button class="btn-sm btn-refresh" onclick="loadAdminData()">↺ 새로고침</button>
+          <button class="btn-sm btn-export" onclick="exportCSV()">📥 CSV</button>
+          <button class="btn-sm btn-lock" onclick="lockAdmin()">🔒 잠금</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">전체 지게차</div>
+          <div class="stat-val">9</div>
+          <div class="stat-sub">FL-01 ~ FL-09</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">현재 가동 중</div>
+          <div class="stat-val green" id="s-active">-</div>
+          <div class="stat-sub">실시간</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">오늘 작업 건수</div>
+          <div class="stat-val" id="s-today">-</div>
+          <div class="stat-sub">완료 포함</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">오늘 총 가동</div>
+          <div class="stat-val slate" id="s-hours">-</div>
+          <div class="stat-sub">완료 기준</div>
+        </div>
+      </div>
+
+      <!-- FL mini grid -->
+      <div class="fl-status-grid" id="fl-status-grid"></div>
+
+      <!-- Script 미설정 경고 -->
+      <div class="script-warn" id="script-warn" style="display:none">
+        ⚠️ Apps Script URL이 설정되지 않았습니다. 코드 상단 <code>SCRIPT_URL</code> 변수를 설정해 주세요.
+        아래 테이블은 로컬 임시 데이터입니다.
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-row">
+        <input class="fi fi-name" id="f-name" type="text" placeholder="담당자 검색" oninput="renderTable()">
+        <select class="fi" id="f-fl" onchange="renderTable()">
+          <option value="">전체 호기</option>
+          <option>FL-01</option><option>FL-02</option><option>FL-03</option>
+          <option>FL-04</option><option>FL-05</option><option>FL-06</option>
+          <option>FL-07</option><option>FL-08</option><option>FL-09</option>
+        </select>
+        <select class="fi" id="f-status" onchange="renderTable()">
+          <option value="">전체 상태</option>
+          <option value="on">진행 중</option>
+          <option value="done">완료</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>호기</th><th>담당자</th><th>부서</th><th>이용사유</th>
+              <th>시작</th><th>종료</th><th>이용시간</th><th>상태</th><th>비고</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody">
+            <tr><td colspan="9" class="load-row">데이터 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: 시작 확인 -->
+<div class="modal-bg" id="m-start">
+  <div class="modal">
+    <h2>작업을 시작할까요?</h2>
+    <p>아래 내용을 확인해 주세요.</p>
+    <div class="minfo">
+      <div class="mrow"><span>지게차</span><span id="mc-fl">-</span></div>
+      <div class="mrow"><span>담당자</span><span id="mc-name">-</span></div>
+      <div class="mrow"><span>부서</span><span id="mc-dept">-</span></div>
+      <div class="mrow"><span>이용사유</span><span id="mc-reason">-</span></div>
+      <div class="mrow"><span>시작 시각</span><span id="mc-time">-</span></div>
+    </div>
+    <div class="mbtns">
+      <button class="btn-cancel" onclick="closeModal('m-start')">취소</button>
+      <button class="btn-confirm" onclick="confirmStart()">시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: 종료 확인 -->
+<div class="modal-bg" id="m-end">
+  <div class="modal">
+    <h2>작업을 종료할까요?</h2>
+    <p>종료 시각이 기록됩니다.</p>
+    <div class="minfo">
+      <div class="mrow"><span>지게차</span><span id="me-fl">-</span></div>
+      <div class="mrow"><span>담당자</span><span id="me-name">-</span></div>
+      <div class="mrow"><span>시작 시각</span><span id="me-start">-</span></div>
+      <div class="mrow"><span>경과 시간</span><span id="me-elapsed" style="color:var(--green)">-</span></div>
+    </div>
+    <div class="mbtns">
+      <button class="btn-cancel" onclick="closeModal('m-end')">취소</button>
+      <button class="btn-confirm-end" onclick="confirmEnd()">종료</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+//  ★ 설정 — 여기만 바꾸면 됩니다
+// ════════════════════════════════════════
+const SCRIPT_URL = '';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
+const ADMIN_PW   = '1234';   // 관리자 비밀번호
+// ════════════════════════════════════════
+
+const FLS = ['FL-01','FL-02','FL-03','FL-04','FL-05','FL-06','FL-07','FL-08','FL-09'];
+let selFL = null, selReason = null;
+let sessions = JSON.parse(localStorage.getItem('fl-sess') || '{}');
+let logs     = JSON.parse(localStorage.getItem('fl-logs') || '[]');
+let timerIv  = null;
+let adminRows = [];
+
+function save() {
+  localStorage.setItem('fl-sess', JSON.stringify(sessions));
+  localStorage.setItem('fl-logs',  JSON.stringify(logs));
+}
+
+// ── Page switch ──
+function showPage(p, btn) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (p === 'admin') initAdmin();
+}
+
+// ══════════════════════════════
+//  WORKER
+// ══════════════════════════════
+function renderFLGrid() {
+  const g = document.getElementById('fl-grid');
+  g.innerHTML = '';
+  FLS.forEach(fl => {
+    const on  = !!sessions[fl];
+    const sel = fl === selFL;
+    const d   = document.createElement('div');
+    d.className = 'fl-card' + (on ? ' in-use' : '') + (sel ? ' selected' : '');
+    d.innerHTML = `<div class="fl-dot"></div>
+      <div class="fl-num">${fl}</div>
+      <div class="fl-label">${on ? '사용 중' : '대기'}</div>`;
+    d.onclick = () => selectFL(fl);
+    g.appendChild(d);
+  });
+  updateBanner();
+}
+
+function selectFL(fl) {
+  selFL = fl;
+  renderFLGrid();
+  const on = !!sessions[fl];
+  document.getElementById('form-section').classList.toggle('visible', !on);
+  document.getElementById('end-section').classList.toggle('visible', on);
+  if (on) {
+    const s = sessions[fl];
+    document.getElementById('end-detail').innerHTML =
+      `<strong>${s.fl}</strong> · ${s.name}<br>
+       <span style="color:var(--text3)">이유:</span> ${s.reason}<br>
+       <span style="color:var(--text3)">시작:</span> <span class="mono">${s.startStr}</span>`;
+  }
+}
+
+function pickReason(el) {
+  document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selReason = el.textContent;
+}
+
+function handleStart() {
+  if (!selFL) return alert('호기를 선택하세요.');
+  const name = document.getElementById('inp-name').value.trim();
+  if (!name) return alert('담당자 이름을 입력하세요.');
+  if (!selReason) return alert('이용 사유를 선택하세요.');
+  const now = new Date();
+  document.getElementById('mc-fl').textContent     = selFL;
+  document.getElementById('mc-name').textContent   = name;
+  document.getElementById('mc-dept').textContent   = document.getElementById('inp-dept').value || '미지정';
+  document.getElementById('mc-reason').textContent = selReason;
+  document.getElementById('mc-time').textContent   = fmtTime(now);
+  document.getElementById('m-start').classList.add('open');
+}
+
+async function confirmStart() {
+  closeModal('m-start');
+  const now = new Date();
+  const s = {
+    fl: selFL,
+    name: document.getElementById('inp-name').value.trim(),
+    dept: document.getElementById('inp-dept').value || '미지정',
+    reason: selReason,
+    note: document.getElementById('inp-note').value.trim(),
+    startMs: now.getTime(),
+    startStr: fmtTime(now),
+    rowId: now.getTime().toString()
+  };
+  sessions[selFL] = s;
+  save();
+
+  // 폼 초기화
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-dept').value = '';
+  document.getElementById('inp-note').value = '';
+  document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('active'));
+  selReason = null;
+
+  // 시트 전송
+  if (SCRIPT_URL) {
+    showSending('sending-start', true);
+    try {
+      await postToSheet({ action: 'start', ...s });
+    } catch(e) { console.warn('시트 전송 실패:', e); }
+    showSending('sending-start', false);
+  }
+  selectFL(selFL);
+  renderFLGrid();
+}
+
+function handleEnd() {
+  const s = sessions[selFL];
+  if (!s) return;
+  const elapsed = Date.now() - s.startMs;
+  document.getElementById('me-fl').textContent      = s.fl;
+  document.getElementById('me-name').textContent    = s.name;
+  document.getElementById('me-start').textContent   = s.startStr;
+  document.getElementById('me-elapsed').textContent = fmtElapsed(elapsed);
+  document.getElementById('m-end').classList.add('open');
+}
+
+async function confirmEnd() {
+  closeModal('m-end');
+  const now = new Date();
+  const fl  = selFL;
+  const s   = sessions[fl];
+  const elapsed = now.getTime() - s.startMs;
+  const log = { ...s, endMs: now.getTime(), endStr: fmtTime(now), elapsedMs: elapsed, date: now.toLocaleDateString('ko-KR') };
+  logs.unshift(log);
+  delete sessions[fl];
+  save();
+
+  if (SCRIPT_URL) {
+    showSending('sending-end', true);
+    try {
+      await postToSheet({ action: 'end', rowId: s.rowId, endStr: log.endStr, elapsedMin: Math.round(elapsed/60000) });
+    } catch(e) { console.warn('시트 전송 실패:', e); }
+    showSending('sending-end', false);
+  }
+  selFL = null;
+  document.getElementById('form-section').classList.remove('visible');
+  document.getElementById('end-section').classList.remove('visible');
+  renderFLGrid();
+}
+
+// ── Banner & timer ──
+function updateBanner() {
+  const banner = document.getElementById('active-banner');
+  const all = Object.values(sessions);
+  if (!all.length) { banner.classList.remove('visible'); return; }
+  const s = (selFL && sessions[selFL]) ? sessions[selFL] : all[0];
+  banner.classList.add('visible');
+  document.getElementById('bn-fl').textContent   = s.fl;
+  document.getElementById('bn-info').textContent = `${s.name} · ${s.reason}`;
+  document.getElementById('bn-timer').textContent = fmtElapsed(Date.now() - s.startMs);
+}
+
+function showSending(id, v) {
+  document.getElementById(id).classList.toggle('visible', v);
+  document.getElementById('btn-start').disabled = v;
+}
+
+// ── Sheet API ──
+async function postToSheet(data) {
+  await fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+}
+
+// ══════════════════════════════
+//  ADMIN
+// ══════════════════════════════
+function initAdmin() {
+  document.getElementById('admin-date').textContent =
+    new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  renderFLMini();
+  loadAdminData();
+}
+
+function tryUnlock() {
+  const v = document.getElementById('pw-input').value;
+  const inp = document.getElementById('pw-input');
+  if (v === ADMIN_PW) {
+    document.getElementById('admin-lock').style.display  = 'none';
+    document.getElementById('admin-inner').classList.add('unlocked');
+    inp.value = '';
+    document.getElementById('lock-error').textContent = '';
+  } else {
+    inp.classList.add('error');
+    document.getElementById('lock-error').textContent = '비밀번호가 틀렸습니다.';
+    setTimeout(() => inp.classList.remove('error'), 1200);
+  }
+}
+
+function lockAdmin() {
+  document.getElementById('admin-lock').style.display = '';
+  document.getElementById('admin-inner').classList.remove('unlocked');
+  document.getElementById('pw-input').value = '';
+}
+
+async function loadAdminData() {
+  if (!SCRIPT_URL) {
+    document.getElementById('script-warn').style.display = '';
+    // 로컬 데이터로 대체
+    adminRows = buildLocalRows();
+    updateStats(adminRows);
+    renderFLMini();
+    renderTable();
+    return;
+  }
+  document.getElementById('script-warn').style.display = 'none';
+  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="9" class="load-row">불러오는 중...</td></tr>';
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=get');
+    const data = await res.json();
+    adminRows = data.rows || [];
+  } catch(e) {
+    adminRows = buildLocalRows();
+  }
+  updateStats(adminRows);
+  renderFLMini();
+  renderTable();
+}
+
+function buildLocalRows() {
+  const rows = [];
+  Object.values(sessions).forEach(s => {
+    rows.push({ fl:s.fl, name:s.name, dept:s.dept, reason:s.reason,
+      startStr:s.startStr, endStr:'-', elapsedMs: Date.now()-s.startMs,
+      note:s.note, status:'on', startMs:s.startMs });
+  });
+  logs.forEach(l => {
+    rows.push({ fl:l.fl, name:l.name, dept:l.dept, reason:l.reason,
+      startStr:l.startStr, endStr:l.endStr, elapsedMs:l.elapsedMs,
+      note:l.note, status:'done', startMs:l.startMs, date:l.date });
+  });
+  return rows;
+}
+
+function updateStats(rows) {
+  const today = new Date().toLocaleDateString('ko-KR');
+  const onCount = Object.keys(sessions).length;
+  const todayDone = rows.filter(r => r.status==='done' && r.date===today);
+  const totalMin  = todayDone.reduce((a,r) => a + Math.round((r.elapsedMs||0)/60000), 0);
+  document.getElementById('s-active').textContent = onCount;
+  document.getElementById('s-today').textContent  = todayDone.length + onCount;
+  document.getElementById('s-hours').textContent  = `${Math.floor(totalMin/60)}h ${totalMin%60}m`;
+}
+
+function renderFLMini() {
+  const g = document.getElementById('fl-status-grid');
+  g.innerHTML = '';
+  FLS.forEach(fl => {
+    const on = !!sessions[fl];
+    const d = document.createElement('div');
+    d.className = 'fl-sc' + (on ? ' on' : '');
+    d.innerHTML = `<div class="fl-sc-num">${fl}</div>
+      <div class="fl-sc-state">${on ? fmtElapsed(Date.now()-sessions[fl].startMs) : '대기'}</div>`;
+    g.appendChild(d);
+  });
+}
+
+function renderTable() {
+  const nf  = document.getElementById('f-name').value.toLowerCase();
+  const flf = document.getElementById('f-fl').value;
+  const sf  = document.getElementById('f-status').value;
+
+  let rows = buildLocalRows().filter(r => {
+    if (nf  && !r.name.toLowerCase().includes(nf)) return false;
+    if (flf && r.fl !== flf) return false;
+    if (sf  && r.status !== sf) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('log-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">기록이 없습니다</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><span class="fl-tag">${r.fl}</span></td>
+      <td>${r.name}</td>
+      <td style="color:var(--text2)">${r.dept||'-'}</td>
+      <td>${r.reason}</td>
+      <td class="mono">${r.startStr}</td>
+      <td class="mono" style="color:var(--text2)">${r.endStr||'-'}</td>
+      <td class="mono" style="color:${r.status==='on'?'var(--green)':'var(--text2)'}">
+        ${fmtElapsed(r.elapsedMs||0)}</td>
+      <td><span class="badge ${r.status==='on'?'badge-on':'badge-done'}">${r.status==='on'?'진행 중':'완료'}</span></td>
+      <td style="color:var(--text3);font-size:12px">${r.note||'-'}</td>
+    </tr>`).join('');
+}
+
+function exportCSV() {
+  const rows = buildLocalRows();
+  const hd = ['호기','담당자','부서','이용사유','시작','종료','이용시간(분)','상태','비고'];
+  const body = rows.map(r => [
+    r.fl, r.name, r.dept||'', r.reason, r.startStr, r.endStr||'',
+    Math.round((r.elapsedMs||0)/60000),
+    r.status==='on'?'진행중':'완료', r.note||''
+  ].join(','));
+  const csv = [hd.join(','), ...body].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = `지게차_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── Modals ──
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+window.onclick = e => { if (e.target.classList.contains('modal-bg')) e.target.classList.remove('open'); };
+
+// ── Helpers ──
+function fmtTime(d) {
+  return d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+function fmtElapsed(ms) {
+  const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if (h > 0) return `${h}h ${String(m).padStart(2,'0')}m`;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+// ── Init ──
+renderFLGrid();
+setInterval(() => {
+  updateBanner();
+  renderFLMini();
+}, 1000);
+
+// 샘플 데이터 (첫 실행시)
+if (!logs.length) {
+  const now = Date.now();
+  [['FL-03','김철수','물류팀','화물 하역'],['FL-07','이영희','생산팀','자재 운반']].forEach(([fl,name,dept,reason],i)=>{
+    const start = now-(i+1)*5400000, dur=2700000+i*900000;
+    logs.push({ fl,name,dept,reason,note:'',
+      startMs:start, startStr:fmtTime(new Date(start)),
+      endMs:start+dur, endStr:fmtTime(new Date(start+dur)),
+      elapsedMs:dur, date:new Date().toLocaleDateString('ko-KR'), status:'done' });
+  });
+  save();
+}
+</script>
+</body>
+</html>
