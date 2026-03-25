@@ -1069,8 +1069,13 @@ async function syncSessionsFromSheet() {
         updated = true;
       }
     });
-    // 시트에 없는 로컬 세션 정리 (다른 폰에서 이미 종료된 경우)
+    // 시트에서 종료 확인된 세션만 로컬에서 제거
+    // (단, 방금 시작해서 아직 시트에 안 올라간 세션은 30초 유예)
+    const now = Date.now();
     Object.keys(sessions).forEach(fl => {
+      const s = sessions[fl];
+      const age = now - (s.startMs || 0);
+      if (age < 30000) return; // 30초 이내 시작은 보호
       const stillActive = activeRows.find(r => r.fl === fl);
       if (!stillActive) {
         delete sessions[fl];
