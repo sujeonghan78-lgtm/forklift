@@ -454,7 +454,7 @@ tr:hover td { background: var(--bg3); }
         </div>
         <div class="form-group">
           <label class="form-label">호선</label>
-          <input class="form-input" id="inp-vessel" type="text" placeholder="예: H1234호선">
+          <input class="form-input" id="inp-vessel" type="text" placeholder="예: 1234">
         </div>
       </div>
 
@@ -584,12 +584,12 @@ tr:hover td { background: var(--bg3); }
         <table>
           <thead>
             <tr>
-              <th>호기</th><th>담당자</th><th>부서</th><th>시스템</th><th>호선</th><th>이용사유</th>
+              <th>호기</th><th>담당자</th><th>부서</th><th>시스템</th><th>호선</th><th>이용사유</th><th>직접입력</th>
               <th>시작</th><th>종료</th><th>이용시간</th><th>청구시간</th><th>금액</th><th>상태</th><th>비고</th><th></th>
             </tr>
           </thead>
           <tbody id="log-tbody">
-            <tr><td colspan="14" class="load-row">데이터 불러오는 중...</td></tr>
+            <tr><td colspan="15" class="load-row">데이터 불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -640,7 +640,7 @@ tr:hover td { background: var(--bg3); }
 // ════════════════════════════════════════
 //  ★ 설정 — 여기만 바꾸면 됩니다
 // ════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw66jic4kzkJAy-Zlia2RFIj4ZqpXFDcf7GzlU0XQYGMyhNFaMric8AXSGsmgmVLScFow/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9DGWq1PKUvWdCv5xIaAnXqctOlt-VdBB0SDDt1RxZ9x2IRQbAVHBdYaE2njMRxVE/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
 const ADMIN_PW   = '1234';   // 관리자 비밀번호
 // ════════════════════════════════════════
 
@@ -757,7 +757,8 @@ async function confirmStart() {
     dept: document.getElementById('inp-dept').value || '',
     system: document.getElementById('inp-system').value,
     vessel: document.getElementById('inp-vessel').value.trim(),
-    reason: custom || selReason,
+    reason: selReason || '',
+    customReason: custom || '',
     note: document.getElementById('inp-note').value.trim(),
     startMs: now.getTime(),
     startStr: fmtTime(now),
@@ -780,7 +781,7 @@ async function confirmStart() {
   if (SCRIPT_URL) {
     showSending('sending-start', true);
     try {
-      await postToSheet({ action: 'start', rowId:s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', vessel:s.vessel||'', reason:s.reason, startStr:s.startStr, note:s.note||'' });
+      await postToSheet({ action: 'start', rowId:s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'', startStr:s.startStr, note:s.note||'' });
     } catch(e) { console.warn('시트 전송 실패:', e); }
     showSending('sending-start', false);
   }
@@ -891,7 +892,7 @@ async function loadAdminData() {
     return;
   }
   document.getElementById('script-warn').style.display = 'none';
-  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="14" class="load-row">불러오는 중...</td></tr>';
+  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="15" class="load-row">불러오는 중...</td></tr>';
   try {
     const data = await fetchJSONP(SCRIPT_URL + '?action=get&callback=__cb__');
     adminRows = data.rows || [];
@@ -925,7 +926,7 @@ function buildLocalRows() {
       note:s.note, status:'on', startMs:s.startMs });
   });
   logs.forEach(l => {
-    rows.push({ id:l.id||l.startMs+'_'+l.fl, fl:l.fl, name:l.name, dept:l.dept, system:l.system||'', vessel:l.vessel||'', reason:l.reason,
+    rows.push({ id:l.id||l.startMs+'_'+l.fl, fl:l.fl, name:l.name, dept:l.dept, system:l.system||'', vessel:l.vessel||'', reason:l.reason, customReason:l.customReason||'',
       startStr:l.startStr, endStr:l.endStr, elapsedMs:l.elapsedMs,
       note:l.note, status:'done', startMs:l.startMs, date:l.date });
   });
@@ -966,7 +967,7 @@ function renderTable() {
   const source = (adminRows && adminRows.length) ? adminRows : buildLocalRows();
   // 진행 중 세션은 항상 로컬에서 추가
   const onRows = Object.values(sessions).map(s => ({
-    id: s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', vessel:s.vessel||'', reason:s.reason,
+    id: s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'',
     startStr:s.startStr, endStr:'-', elapsedMs: Date.now()-s.startMs,
     note:s.note, status:'on', startMs:s.startMs
   }));
@@ -981,7 +982,7 @@ function renderTable() {
 
   const tbody = document.getElementById('log-tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="14" class="empty">기록이 없습니다</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" class="empty">기록이 없습니다</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map((r,i) => {
@@ -995,6 +996,7 @@ function renderTable() {
       <td style="color:var(--text2)">${r.system||''}</td>
       <td style="color:var(--text2)">${r.vessel||''}</td>
       <td>${r.reason}</td>
+      <td style="color:var(--text2);font-size:12px">${r.customReason||''}</td>
       <td class="mono">${r.startStr}</td>
       <td class="mono" style="color:var(--text2)">${r.endStr||'-'}</td>
       <td class="mono" style="color:${r.status==='on'?'var(--green)':'var(--text2)'}">${fmtElapsed(r.elapsedMs||0)}</td>
@@ -1017,9 +1019,9 @@ function deleteLog(id, fl, startStr) {
 
 function exportCSV() {
   const rows = buildLocalRows();
-  const hd = ['호기','톤수','담당자','부서','시스템','호선','이용사유','시작','종료','이용시간(분)','청구시간(h)','금액(원)','상태','비고'];
+  const hd = ['호기','톤수','담당자','부서','시스템','호선','이용사유','직접입력','시작','종료','이용시간(분)','청구시간(h)','금액(원)','상태','비고'];
   const body = rows.map(r => [
-    r.fl, FL_TONS[r.fl]||'', r.name, r.dept||'', r.system||'', r.vessel||'', r.reason, r.startStr, r.endStr||'',
+    r.fl, FL_TONS[r.fl]||'', r.name, r.dept||'', r.system||'', r.vessel||'', r.reason, r.customReason||'', r.startStr, r.endStr||'',
     Math.round((r.elapsedMs||0)/60000),
     r.status==='done'?calcBilledHours(r.elapsedMs||0):'',
     r.status==='done'?calcPrice(r.fl,r.elapsedMs||0):'',
@@ -1047,24 +1049,52 @@ function fmtElapsed(ms) {
 }
 
 // ── Init ──
+// 앱 시작 시 시트에서 진행 중 세션 동기화
+async function syncSessionsFromSheet() {
+  if (!SCRIPT_URL) return;
+  try {
+    const data = await fetchJSONP(SCRIPT_URL + '?action=get&callback=__cb__');
+    const activeRows = (data.rows || []).filter(r => r.status === 'on');
+    let updated = false;
+    activeRows.forEach(r => {
+      // 로컬에 없는 진행 중 세션만 추가
+      if (!sessions[r.fl]) {
+        sessions[r.fl] = {
+          fl: r.fl, name: r.name, dept: r.dept,
+          system: r.system||'', vessel: r.vessel||'',
+          reason: r.reason, customReason: r.customReason||'',
+          note: r.note||'', startMs: Date.now() - (r.elapsedMs||0),
+          startStr: r.startStr, rowId: r.rowId
+        };
+        updated = true;
+      }
+    });
+    // 시트에 없는 로컬 세션 정리 (다른 폰에서 이미 종료된 경우)
+    Object.keys(sessions).forEach(fl => {
+      const stillActive = activeRows.find(r => r.fl === fl);
+      if (!stillActive) {
+        delete sessions[fl];
+        updated = true;
+      }
+    });
+    if (updated) { save(); renderFLGrid(); }
+  } catch(e) {
+    console.warn('세션 동기화 실패:', e);
+  }
+}
+
 renderFLGrid();
+syncSessionsFromSheet();
 setInterval(() => {
   updateBanner();
   renderFLMini();
 }, 1000);
+// 30초마다 세션 동기화
+setInterval(syncSessionsFromSheet, 30000);
 
-// 샘플 데이터 (첫 실행시)
-if (!logs.length) {
-  const now = Date.now();
-  [['6710','김철수','물류팀','화물 하역'],['8108','이영희','생산팀','자재 운반']].forEach(([fl,name,dept,reason],i)=>{
-    const start = now-(i+1)*5400000, dur=2700000+i*900000;
-    logs.push({ fl,name,dept,reason,note:'',
-      startMs:start, startStr:fmtTime(new Date(start)),
-      endMs:start+dur, endStr:fmtTime(new Date(start+dur)),
-      elapsedMs:dur, date:new Date().toLocaleDateString('ko-KR'), status:'done' });
-  });
-  save();
-}
+// 기존 더미 데이터 자동 제거 (FL-03, FL-07 샘플)
+logs = logs.filter(l => l.name !== '김철수' && l.name !== '이영희');
+save();
 </script>
 </body>
 </html>
