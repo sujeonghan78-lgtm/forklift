@@ -443,6 +443,18 @@ tr:hover td { background: var(--bg3); }
           </select>
         </div>
         <div class="form-group">
+          <label class="form-label">작업 장소 *</label>
+          <select class="form-select" id="inp-location" onchange="toggleLocationInput(this.value)">
+            <option value="">선택하세요 *</option>
+            <option>1공장</option><option>2공장</option>
+            <option>3공장</option><option>기타</option>
+          </select>
+        </div>
+        <div class="form-group" id="location-custom-wrap" style="display:none">
+          <label class="form-label">장소 직접 입력</label>
+          <input class="form-input" id="inp-location-custom" type="text" placeholder="장소를 입력하세요">
+        </div>
+        <div class="form-group">
           <label class="form-label">호선</label>
           <input class="form-input" id="inp-vessel" type="text" placeholder="예: 1234">
         </div>
@@ -547,12 +559,12 @@ tr:hover td { background: var(--bg3); }
         <table>
           <thead>
             <tr>
-              <th>호기</th><th>담당자</th><th>부서</th><th>시스템</th><th>호선</th><th>이용사유</th><th>직접입력</th>
+              <th>호기</th><th>담당자</th><th>부서</th><th>시스템</th><th>작업장소</th><th>호선</th><th>이용사유</th><th>직접입력</th>
               <th>시작</th><th>종료</th><th>이용시간</th><th>청구시간</th><th>금액</th><th>상태</th><th>비고</th><th></th>
             </tr>
           </thead>
           <tbody id="log-tbody">
-            <tr><td colspan="15" class="load-row">데이터 불러오는 중...</td></tr>
+            <tr><td colspan="16" class="load-row">데이터 불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -570,6 +582,7 @@ tr:hover td { background: var(--bg3); }
       <div class="mrow"><span>담당자</span><span id="mc-name">-</span></div>
       <div class="mrow"><span>부서</span><span id="mc-dept">-</span></div>
       <div class="mrow"><span>시스템</span><span id="mc-system">-</span></div>
+      <div class="mrow"><span>작업장소</span><span id="mc-location">-</span></div>
       <div class="mrow"><span>호선</span><span id="mc-vessel">-</span></div>
       <div class="mrow"><span>이용사유</span><span id="mc-reason">-</span></div>
       <div class="mrow"><span>시작 시각</span><span id="mc-time">-</span></div>
@@ -603,7 +616,7 @@ tr:hover td { background: var(--bg3); }
 // ════════════════════════════════════════
 //  ★ 설정 — 여기만 바꾸면 됩니다
 // ════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxVQiq_ZWjEW-qFIc5b3hggfG5TEcSheg3uQJ0q0ITiCkIxUasDK3Lcu0HXEiG2rYmNw/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx98H0IaIUKgqFBBhNNTruMFqTvE1vcrWyHceTTqo8R522CayHepZ_fwm9_OreGH9aUSQ/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
 const ADMIN_PW   = '1234';
 // ════════════════════════════════════════
 
@@ -684,6 +697,12 @@ function selectFL(fl) {
   }
 }
 
+function toggleLocationInput(val) {
+  const wrap = document.getElementById('location-custom-wrap');
+  wrap.style.display = val === '기타' ? 'block' : 'none';
+  if (val !== '기타') document.getElementById('inp-location-custom').value = '';
+}
+
 function pickReason(el) {
   document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
@@ -697,6 +716,10 @@ function handleStart() {
   const system = document.getElementById('inp-system').value.trim();
   if (!system) return alert('시스템을 선택하세요.');
   const vessel = document.getElementById('inp-vessel').value.trim();
+  const locationSel = document.getElementById('inp-location').value;
+  if (!locationSel) return alert('작업 장소를 선택하세요.');
+  const locationCustom = document.getElementById('inp-location-custom').value.trim();
+  const location = locationSel === '기타' ? (locationCustom || '기타') : locationSel;
   const custom = document.getElementById('inp-reason-custom').value.trim();
   const finalReason = custom || selReason;
   if (!finalReason) return alert('이용 사유를 선택하거나 직접 입력하세요.');
@@ -705,6 +728,7 @@ function handleStart() {
   document.getElementById('mc-name').textContent   = name;
   document.getElementById('mc-dept').textContent   = document.getElementById('inp-dept').value || '미지정';
   document.getElementById('mc-system').textContent = system;
+  document.getElementById('mc-location').textContent = location;
   document.getElementById('mc-vessel').textContent = vessel || '-';
   document.getElementById('mc-reason').textContent = finalReason;
   document.getElementById('mc-time').textContent   = fmtTime(now);
@@ -720,6 +744,7 @@ async function confirmStart() {
     name: document.getElementById('inp-name').value.trim(),
     dept: document.getElementById('inp-dept').value || '',
     system: document.getElementById('inp-system').value,
+    location: location,
     vessel: document.getElementById('inp-vessel').value.trim(),
     reason: selReason || '',
     customReason: custom || '',
@@ -735,6 +760,9 @@ async function confirmStart() {
   document.getElementById('inp-name').value = '';
   document.getElementById('inp-dept').value = '';
   document.getElementById('inp-system').value = '';
+  document.getElementById('inp-location').value = '';
+  document.getElementById('inp-location-custom').value = '';
+  document.getElementById('location-custom-wrap').style.display = 'none';
   document.getElementById('inp-vessel').value = '';
   document.getElementById('inp-reason-custom').value = '';
   document.getElementById('inp-note').value = '';
@@ -745,7 +773,7 @@ async function confirmStart() {
   if (SCRIPT_URL) {
     showSending('sending-start', true);
     try {
-      await postToSheet({ action: 'start', rowId:s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'', startStr:s.startStr, note:s.note||'' });
+      await postToSheet({ action: 'start', rowId:s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', location:s.location||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'', startStr:s.startStr, note:s.note||'' });
     } catch(e) { console.warn('시트 전송 실패:', e); }
     showSending('sending-start', false);
   }
@@ -779,7 +807,7 @@ async function confirmEnd() {
   if (SCRIPT_URL) {
     showSending('sending-end', true);
     try {
-      await postToSheet({ action: 'end', rowId: s.rowId, fl: s.fl, name: s.name, dept: s.dept||'', system: s.system||'', vessel: s.vessel||'', reason: s.reason||'', customReason: s.customReason||'', note: s.note||'', startStr: s.startStr, endStr: log.endStr, elapsedMin: Math.round(elapsed/60000), elapsedStr: fmtElapsed(elapsed) });
+      await postToSheet({ action: 'end', rowId: s.rowId, fl: s.fl, name: s.name, dept: s.dept||'', system: s.system||'', location: s.location||'', vessel: s.vessel||'', reason: s.reason||'', customReason: s.customReason||'', note: s.note||'', startStr: s.startStr, endStr: log.endStr, elapsedMin: Math.round(elapsed/60000), elapsedStr: fmtElapsed(elapsed) });
     } catch(e) { console.warn('시트 전송 실패:', e); }
     showSending('sending-end', false);
   }
@@ -856,7 +884,7 @@ async function loadAdminData() {
     return;
   }
   document.getElementById('script-warn').style.display = 'none';
-  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="15" class="load-row">불러오는 중...</td></tr>';
+  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="16" class="load-row">불러오는 중...</td></tr>';
   try {
     const data = await fetchJSONP(SCRIPT_URL + '?action=get&callback=__cb__');
     adminRows = data.rows || [];
@@ -885,12 +913,12 @@ function fetchJSONP(url) {
 function buildLocalRows() {
   const rows = [];
   Object.values(sessions).forEach(s => {
-    rows.push({ fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'',
+    rows.push({ fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', location:s.location||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'',
       startStr:s.startStr, endStr:'-', elapsedMs: Date.now()-s.startMs,
       note:s.note, status:'on', startMs:s.startMs });
   });
   logs.forEach(l => {
-    rows.push({ id:l.id||l.startMs+'_'+l.fl, fl:l.fl, name:l.name, dept:l.dept, system:l.system||'', vessel:l.vessel||'', reason:l.reason, customReason:l.customReason||'',
+    rows.push({ id:l.id||l.startMs+'_'+l.fl, fl:l.fl, name:l.name, dept:l.dept, system:l.system||'', location:l.location||'', vessel:l.vessel||'', reason:l.reason, customReason:l.customReason||'',
       startStr:l.startStr, endStr:l.endStr, elapsedMs:l.elapsedMs,
       note:l.note, status:'done', startMs:l.startMs, date:l.date });
   });
@@ -921,7 +949,7 @@ function renderTable() {
   const source = (adminRows && adminRows.length) ? adminRows : buildLocalRows();
   // 진행 중 세션은 항상 로컬에서 추가
   const onRows = Object.values(sessions).map(s => ({
-    id: s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'',
+    id: s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', location:s.location||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'',
     startStr:s.startStr, endStr:'-', elapsedMs: Date.now()-s.startMs,
     note:s.note, status:'on', startMs:s.startMs
   }));
@@ -936,7 +964,7 @@ function renderTable() {
 
   const tbody = document.getElementById('log-tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="15" class="empty">기록이 없습니다</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="16" class="empty">기록이 없습니다</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map((r,i) => {
@@ -948,6 +976,7 @@ function renderTable() {
       <td>${r.name}</td>
       <td style="color:var(--text2)">${r.dept||'-'}</td>
       <td style="color:var(--text2)">${r.system||''}</td>
+      <td style="color:var(--text2)">${r.location||''}</td>
       <td style="color:var(--text2)">${r.vessel||''}</td>
       <td>${r.reason}</td>
       <td style="color:var(--text2);font-size:12px">${r.customReason||''}</td>
@@ -973,9 +1002,9 @@ function deleteLog(id, fl, startStr) {
 
 function exportCSV() {
   const rows = buildLocalRows();
-  const hd = ['호기','톤수','담당자','부서','시스템','호선','이용사유','직접입력','시작','종료','이용시간(분)','청구시간(h)','금액(원)','상태','비고'];
+  const hd = ['호기','톤수','담당자','부서','시스템','작업장소','호선','이용사유','직접입력','시작','종료','이용시간(분)','청구시간(h)','금액(원)','상태','비고'];
   const body = rows.map(r => [
-    r.fl, FL_TONS[r.fl]||'', r.name, r.dept||'', r.system||'', r.vessel||'', r.reason, r.customReason||'', r.startStr, r.endStr||'',
+    r.fl, FL_TONS[r.fl]||'', r.name, r.dept||'', r.system||'', r.location||'', r.vessel||'', r.reason, r.customReason||'', r.startStr, r.endStr||'',
     Math.round((r.elapsedMs||0)/60000),
     r.status==='done'?calcBilledHours(r.elapsedMs||0):'',
     r.status==='done'?calcPrice(r.fl,r.elapsedMs||0):'',
