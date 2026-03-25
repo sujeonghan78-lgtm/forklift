@@ -1049,53 +1049,11 @@ function fmtElapsed(ms) {
 }
 
 // ── Init ──
-// 앱 시작 시 시트에서 진행 중 세션 동기화
-async function syncSessionsFromSheet() {
-  if (!SCRIPT_URL) return;
-  try {
-    const data = await fetchJSONP(SCRIPT_URL + '?action=get&callback=__cb__');
-    const activeRows = (data.rows || []).filter(r => r.status === 'on');
-    let updated = false;
-    activeRows.forEach(r => {
-      // 로컬에 없는 진행 중 세션만 추가
-      if (!sessions[r.fl]) {
-        sessions[r.fl] = {
-          fl: r.fl, name: r.name, dept: r.dept,
-          system: r.system||'', vessel: r.vessel||'',
-          reason: r.reason, customReason: r.customReason||'',
-          note: r.note||'', startMs: Date.now() - (r.elapsedMs||0),
-          startStr: r.startStr, rowId: r.rowId
-        };
-        updated = true;
-      }
-    });
-    // 시트에서 종료 확인된 세션만 로컬에서 제거
-    // (단, 방금 시작해서 아직 시트에 안 올라간 세션은 30초 유예)
-    const now = Date.now();
-    Object.keys(sessions).forEach(fl => {
-      const s = sessions[fl];
-      const age = now - (s.startMs || 0);
-      if (age < 30000) return; // 30초 이내 시작은 보호
-      const stillActive = activeRows.find(r => r.fl === fl);
-      if (!stillActive) {
-        delete sessions[fl];
-        updated = true;
-      }
-    });
-    if (updated) { save(); renderFLGrid(); }
-  } catch(e) {
-    console.warn('세션 동기화 실패:', e);
-  }
-}
-
 renderFLGrid();
-syncSessionsFromSheet();
 setInterval(() => {
   updateBanner();
   renderFLMini();
 }, 1000);
-// 30초마다 세션 동기화
-setInterval(syncSessionsFromSheet, 30000);
 
 // 기존 더미 데이터 자동 제거 (FL-03, FL-07 샘플)
 logs = logs.filter(l => l.name !== '김철수' && l.name !== '이영희');
