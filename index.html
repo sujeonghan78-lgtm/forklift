@@ -640,7 +640,7 @@ tr:hover td { background: var(--bg3); }
 // ════════════════════════════════════════
 //  ★ 설정 — 여기만 바꾸면 됩니다
 // ════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9DGWq1PKUvWdCv5xIaAnXqctOlt-VdBB0SDDt1RxZ9x2IRQbAVHBdYaE2njMRxVE/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWEzoZdRxyUfA0GHF6k2I1IqQI9XbWiLfD6A6WDsr0lK8Y6obkq9-VFP7UnJQ3UT6naA/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
 const ADMIN_PW   = '1234';   // 관리자 비밀번호
 // ════════════════════════════════════════
 
@@ -648,11 +648,12 @@ const FLS = ['6710','5419','8328','7027','6527','8108','6427','7927','6599'];
 const FL_TONS = {'6710':'25톤','5419':'20톤','8328':'16톤','7027':'5톤','6527':'5톤','8108':'7톤','6427':'7톤','7927':'7톤','6599':'7톤'};
 const FL_RATE = {'6710':330000,'5419':180000,'8328':140000,'7027':60000,'6527':60000,'8108':60000,'6427':60000,'7927':60000,'6599':60000};
 
-// 40분 단위 시간 계산: 최소 1시간, 이후 40분 초과마다 +1시간
+// 첫 40분 = 1시간, 이후 60분 단위 올림
 function calcBilledHours(ms) {
   const totalMin = ms / 60000;
   if (totalMin <= 0) return 0;
-  return Math.max(1, Math.ceil(totalMin / 40));
+  if (totalMin <= 40) return 1;
+  return 1 + Math.ceil((totalMin - 40) / 60);
 }
 
 // 단가 계산
@@ -815,7 +816,7 @@ async function confirmEnd() {
   if (SCRIPT_URL) {
     showSending('sending-end', true);
     try {
-      await postToSheet({ action: 'end', rowId: s.rowId, fl: s.fl, endStr: log.endStr, elapsedMin: Math.round(elapsed/60000) });
+      await postToSheet({ action: 'end', rowId: s.rowId, fl: s.fl, name: s.name, dept: s.dept||'', system: s.system||'', vessel: s.vessel||'', reason: s.reason||'', customReason: s.customReason||'', note: s.note||'', startStr: s.startStr, endStr: log.endStr, elapsedMin: Math.round(elapsed/60000), elapsedStr: fmtElapsed(elapsed) });
     } catch(e) { console.warn('시트 전송 실패:', e); }
     showSending('sending-end', false);
   }
