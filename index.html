@@ -374,11 +374,35 @@ tr:hover td { background: var(--bg3); }
 .btn-confirm-end:hover { background: var(--red-b); }
 
 @media (max-width: 640px) {
-  .stats-row { grid-template-columns: repeat(2,1fr); }
   .fl-status-grid { grid-template-columns: repeat(3,1fr); }
   .admin-wrap { padding: 18px 14px 40px; }
-  .fi-name { width: 110px; }
+  .fi-name { width: 100%; }
+  .filter-row { flex-direction: column; }
+  .filter-row .fi { width: 100% !important; }
+  .table-wrap { display: none; }
+  .card-list { display: block; }
 }
+@media (min-width: 641px) {
+  .card-list { display: none; }
+}
+.log-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  margin-bottom: 10px; box-shadow: var(--shadow);
+}
+.log-card-header {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 10px;
+}
+.log-card-fl { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--blue); }
+.log-card-tons { font-size: 11px; color: var(--text3); margin-left: 5px; }
+.log-card-body { font-size: 13px; line-height: 1.9; }
+.log-card-row { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 4px 0; }
+.log-card-row:last-child { border-bottom: none; }
+.log-card-label { color: var(--text2); font-size: 12px; }
+.log-card-val { color: var(--text); font-weight: 500; font-size: 12px; text-align: right; max-width: 60%; }
+.log-card-price { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--text); }
+.log-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -542,6 +566,8 @@ tr:hover td { background: var(--bg3); }
       <!-- Filter -->
       <div class="filter-row">
         <input class="fi fi-name" id="f-name" type="text" placeholder="담당자 검색" oninput="renderTable()">
+        <input class="fi" id="f-date" type="text" placeholder="날짜 검색 (예: 3. 26)" oninput="renderTable()" style="width:160px">
+        <input class="fi" id="f-vessel" type="text" placeholder="호선 검색" oninput="renderTable()" style="width:120px">
         <select class="fi" id="f-fl" onchange="renderTable()">
           <option value="">전체 호기</option>
           <option>6710</option><option>5419</option><option>8328</option>
@@ -559,15 +585,19 @@ tr:hover td { background: var(--bg3); }
         <table>
           <thead>
             <tr>
-              <th>호기</th><th>담당자</th><th>부서</th><th>시스템</th><th>작업장소</th><th>호선</th><th>이용사유</th><th>직접입력</th>
+              <th>날짜</th><th>호기</th><th>담당자</th><th>부서</th><th>시스템</th><th>작업장소</th><th>호선</th><th>이용사유</th><th>직접입력</th>
               <th>시작</th><th>종료</th><th>이용시간</th><th>청구시간</th><th>금액</th><th>상태</th><th>비고</th><th></th>
             </tr>
           </thead>
           <tbody id="log-tbody">
-            <tr><td colspan="16" class="load-row">데이터 불러오는 중...</td></tr>
+            <tr><td colspan="17" class="load-row">데이터 불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
+
+      <!-- 모바일 카드 리스트 -->
+      <div class="card-list" id="card-list"></div>
+
     </div>
   </div>
 </div>
@@ -616,7 +646,7 @@ tr:hover td { background: var(--bg3); }
 // ════════════════════════════════════════
 //  ★ 설정 — 여기만 바꾸면 됩니다
 // ════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzR1iSGOxZRDYizuIx2z9ttjXT1G4JUm94H9OdawnLuX9HF-xlQoKeZLFqj85C_kjoLgg/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw30dTwfH0_epWTSrcJi9vfnNGrfURw6kg_WOvuT3NVXZvVnaRFC8HDCC7-GzuPPYgvCA/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
 const ADMIN_PW   = '1234';
 // ════════════════════════════════════════
 
@@ -884,7 +914,7 @@ async function loadAdminData() {
     return;
   }
   document.getElementById('script-warn').style.display = 'none';
-  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="16" class="load-row">불러오는 중...</td></tr>';
+  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="17" class="load-row">불러오는 중...</td></tr>';
   try {
     const data = await fetchJSONP(SCRIPT_URL + '?action=get&callback=__cb__');
     adminRows = data.rows || [];
@@ -942,6 +972,8 @@ function renderFLMini() {
 
 function renderTable() {
   const nf  = document.getElementById('f-name').value.toLowerCase();
+  const df  = document.getElementById('f-date').value.toLowerCase();
+  const vf  = document.getElementById('f-vessel').value.toLowerCase();
   const flf = document.getElementById('f-fl').value;
   const sf  = document.getElementById('f-status').value;
 
@@ -957,6 +989,8 @@ function renderTable() {
 
   let rows = combined.filter(r => {
     if (nf  && !r.name.toLowerCase().includes(nf)) return false;
+    if (df  && !(r.date||'').toLowerCase().includes(df)) return false;
+    if (vf  && !(r.vessel||'').toLowerCase().includes(vf)) return false;
     if (flf && r.fl !== flf) return false;
     if (sf  && r.status !== sf) return false;
     return true;
@@ -964,7 +998,7 @@ function renderTable() {
 
   const tbody = document.getElementById('log-tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="16" class="empty">기록이 없습니다</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="17" class="empty">기록이 없습니다</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map((r,i) => {
@@ -972,6 +1006,7 @@ function renderTable() {
     const price  = r.status==='done' ? fmtPrice(calcPrice(r.fl, r.elapsedMs||0)) : '-';
     return `
     <tr>
+      <td style="color:var(--text2);font-size:12px">${r.date||'-'}</td>
       <td><span class="fl-tag">${r.fl}</span><br><span style="font-size:10px;color:var(--text3)">${FL_TONS[r.fl]||''}</span></td>
       <td>${r.name}</td>
       <td style="color:var(--text2)">${r.dept||'-'}</td>
@@ -989,6 +1024,44 @@ function renderTable() {
       <td style="color:var(--text3);font-size:12px">${r.note||'-'}</td>
       <td>${r.status==='done' ? `<button class="btn-del" onclick="deleteLog('${r.id||''}','${r.fl}','${r.startStr}')">삭제</button>` : ''}</td>
     </tr>`;
+  }).join('');
+  renderCards(rows);
+}
+
+function renderCards(rows) {
+  const el = document.getElementById('card-list');
+  if (!el) return;
+  if (!rows.length) { el.innerHTML = '<div class="empty">기록이 없습니다</div>'; return; }
+  el.innerHTML = rows.map(r => {
+    const bHours = r.status==='done' ? calcBilledHours(r.elapsedMs||0) : '-';
+    const price  = r.status==='done' ? fmtPrice(calcPrice(r.fl, r.elapsedMs||0)) : '-';
+    return `
+    <div class="log-card">
+      <div class="log-card-header">
+        <div>
+          <span class="log-card-fl">${r.fl}</span>
+          <span class="log-card-tons">${FL_TONS[r.fl]||''}</span>
+        </div>
+        <span class="badge ${r.status==='on'?'badge-on':'badge-done'}">${r.status==='on'?'진행 중':'완료'}</span>
+      </div>
+      <div class="log-card-body">
+        <div class="log-card-row"><span class="log-card-label">날짜</span><span class="log-card-val">${r.date||'-'}</span></div>
+        <div class="log-card-row"><span class="log-card-label">담당자</span><span class="log-card-val">${r.name} ${r.dept?'('+r.dept+')':''}</span></div>
+        <div class="log-card-row"><span class="log-card-label">시스템</span><span class="log-card-val">${r.system||'-'}</span></div>
+        <div class="log-card-row"><span class="log-card-label">작업장소</span><span class="log-card-val">${r.workLocation||'-'}</span></div>
+        ${r.vessel ? `<div class="log-card-row"><span class="log-card-label">호선</span><span class="log-card-val">${r.vessel}</span></div>` : ''}
+        <div class="log-card-row"><span class="log-card-label">이용사유</span><span class="log-card-val">${r.reason}</span></div>
+        ${r.customReason ? `<div class="log-card-row"><span class="log-card-label">직접입력</span><span class="log-card-val">${r.customReason}</span></div>` : ''}
+        <div class="log-card-row"><span class="log-card-label">시작</span><span class="log-card-val mono">${r.startStr}</span></div>
+        <div class="log-card-row"><span class="log-card-label">종료</span><span class="log-card-val mono">${r.endStr||'-'}</span></div>
+        <div class="log-card-row"><span class="log-card-label">이용시간</span><span class="log-card-val">${fmtElapsed(r.elapsedMs||0)}</span></div>
+        <div class="log-card-row"><span class="log-card-label">청구시간</span><span class="log-card-val" style="color:var(--blue)">${bHours === '-' ? '-' : bHours+'h'}</span></div>
+      </div>
+      <div class="log-card-footer">
+        <span class="log-card-price">${price}</span>
+        ${r.note ? `<span style="font-size:11px;color:var(--text3)">${r.note}</span>` : ''}
+      </div>
+    </div>`;
   }).join('');
 }
 
