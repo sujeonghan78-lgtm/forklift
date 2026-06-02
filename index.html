@@ -25,6 +25,9 @@
   --red:      #dc2626;
   --red-bg:   #fef2f2;
   --red-b:    #fecaca;
+  --amber:    #d97706;
+  --amber-bg: #fffbeb;
+  --amber-b:  #fde68a;
   --shadow:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-m: 0 4px 16px rgba(37,99,235,0.10), 0 1px 4px rgba(0,0,0,0.06);
   --sans: 'Noto Sans KR', sans-serif;
@@ -98,14 +101,22 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .fl-card:hover { border-color: var(--blue-l); box-shadow: var(--shadow-m); }
 .fl-card.selected { border-color: var(--blue); background: var(--blue-xl); box-shadow: var(--shadow-m); }
 .fl-card.in-use { border-color: #86efac; background: var(--green-bg); }
+/* 코일 전용 카드 스타일 */
+.fl-card.coil { border-color: var(--border); background: var(--bg2); }
+.fl-card.coil:hover { border-color: var(--amber); box-shadow: 0 4px 16px rgba(217,119,6,0.10); }
+.fl-card.coil.selected { border-color: var(--amber); background: var(--bg2); }
+.fl-card.coil.in-use { border-color: #86efac; background: var(--green-bg); }
 .fl-num {
   font-family: var(--mono); font-size: 18px; font-weight: 500;
   color: var(--blue); margin-bottom: 3px;
 }
 .fl-card.in-use .fl-num { color: var(--green); }
 .fl-card.selected .fl-num { color: var(--blue-b); }
+.fl-card.coil .fl-num { color: var(--amber); font-size: 15px; }
+.fl-card.coil.selected .fl-num { color: var(--amber); }
 .fl-label { font-size: 11px; color: var(--text3); }
 .fl-card.in-use .fl-label { color: var(--green); }
+.fl-card.coil .fl-label { color: var(--amber); }
 .fl-dot {
   width: 7px; height: 7px; border-radius: 50%;
   position: absolute; top: 8px; right: 8px;
@@ -113,6 +124,16 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 }
 .fl-card.in-use .fl-dot { background: var(--green); box-shadow: 0 0 5px #4ade80; }
 .fl-card.selected .fl-dot { background: var(--blue); }
+.fl-card.coil .fl-dot { background: var(--amber); }
+.fl-card.coil.in-use .fl-dot { background: var(--green); box-shadow: 0 0 5px #4ade80; }
+/* 코일 배지 */
+.fl-coil-badge {
+  display: inline-block;
+  font-size: 9px; font-weight: 600;
+  background: var(--amber); color: #fff;
+  border-radius: 4px; padding: 1px 5px;
+  margin-top: 3px; letter-spacing: 0.03em;
+}
 
 /* Active banner */
 .active-banner {
@@ -259,19 +280,19 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .btn-lock { background: transparent; color: var(--text3); border: 1px solid var(--border); }
 .btn-lock:hover { border-color: var(--border2); color: var(--text2); }
 
-/* Stats */
-
-
 /* FL mini status */
-.fl-status-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 7px; margin-bottom: 24px; }
+.fl-status-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 7px; margin-bottom: 24px; }
 .fl-sc {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: 8px; padding: 9px 6px; text-align: center;
   box-shadow: var(--shadow);
 }
 .fl-sc.on { border-color: #86efac; background: var(--green-bg); }
-.fl-sc-num { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 2px; }
+.fl-sc.coil-type { border-color: var(--border); background: var(--bg2); }
+.fl-sc.coil-type.on { border-color: #86efac; background: var(--green-bg); }
+.fl-sc-num { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--text2); margin-bottom: 2px; }
 .fl-sc.on .fl-sc-num { color: var(--green); }
+.fl-sc.coil-type .fl-sc-num { color: var(--amber); font-size: 10px; }
 .fl-sc-state { font-size: 9px; color: var(--text3); }
 .fl-sc.on .fl-sc-state { color: var(--green); }
 
@@ -311,11 +332,12 @@ tr:hover td { background: var(--bg3); }
 .badge-done { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
 .mono { font-family: var(--mono); font-size: 12px; }
 .fl-tag { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--blue); }
+.fl-tag.coil { color: var(--amber); }
 .empty { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
 .btn-del {
   padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500;
   background: var(--red-bg); color: var(--red); border: 1px solid #fca5a5;
-  cursor: pointer; font-family: var(--sans); transition: all 0.12s;
+  cursor: pointer; font-family: var(--sans); transition: all 0.12px;
 }
 .btn-del:hover { background: var(--red-b); }
 
@@ -374,7 +396,7 @@ tr:hover td { background: var(--bg3); }
 .btn-confirm-end:hover { background: var(--red-b); }
 
 @media (max-width: 640px) {
-  .fl-status-grid { grid-template-columns: repeat(3,1fr); }
+  .fl-status-grid { grid-template-columns: repeat(5,1fr); }
   .admin-wrap { padding: 18px 14px 40px; }
   .fi-name { width: 100%; }
   .filter-row { flex-direction: column; }
@@ -395,6 +417,7 @@ tr:hover td { background: var(--bg3); }
   align-items: center; margin-bottom: 10px;
 }
 .log-card-fl { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--blue); }
+.log-card-fl.coil { color: var(--amber); }
 .log-card-tons { font-size: 11px; color: var(--text3); margin-left: 5px; }
 .log-card-body { font-size: 13px; line-height: 1.9; }
 .log-card-row { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 4px 0; }
@@ -426,7 +449,6 @@ tr:hover td { background: var(--bg3); }
       <h1>지게차 선택</h1>
       <p>작업할 호기를 선택해 주세요</p>
     </div>
-
 
     <div class="fl-grid" id="fl-grid"></div>
 
@@ -533,7 +555,6 @@ tr:hover td { background: var(--bg3); }
         <button class="btn-unlock" onclick="tryUnlock()">확인</button>
       </div>
       <div class="lock-error" id="lock-error"></div>
-
     </div>
   </div>
 
@@ -552,8 +573,6 @@ tr:hover td { background: var(--bg3); }
         </div>
       </div>
 
-
-
       <!-- FL mini grid -->
       <div class="fl-status-grid" id="fl-status-grid"></div>
 
@@ -570,9 +589,10 @@ tr:hover td { background: var(--bg3); }
         <input class="fi" id="f-vessel" type="text" placeholder="호선 검색" oninput="renderTable()" style="width:120px">
         <select class="fi" id="f-fl" onchange="renderTable()">
           <option value="">전체 호기</option>
-          <option>6710</option><option>5419</option><option>8328</option>
-          <option>7027</option><option>6527</option><option>8108</option>
-          <option>6427</option><option>7927</option><option>6599</option>
+          <option>6710</option><option>6710C</option><option>5419</option>
+          <option>8328</option><option>7027</option><option>6527</option>
+          <option>8108</option><option>6427</option><option>7927</option>
+          <option>6599</option>
         </select>
         <select class="fi" id="f-status" onchange="renderTable()">
           <option value="">전체 상태</option>
@@ -646,13 +666,44 @@ tr:hover td { background: var(--bg3); }
 // ════════════════════════════════════════
 //  ★ 설정 — 여기만 바꾸면 됩니다
 // ════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw30dTwfH0_epWTSrcJi9vfnNGrfURw6kg_WOvuT3NVXZvVnaRFC8HDCC7-GzuPPYgvCA/exec';  // Apps Script 배포 URL 붙여넣기 (예: 'https://script.google.com/macros/s/AKfy.../exec')
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw30dTwfH0_epWTSrcJi9vfnNGrfURw6kg_WOvuT3NVXZvVnaRFC8HDCC7-GzuPPYgvCA/exec';
 const ADMIN_PW   = '1234';
 // ════════════════════════════════════════
 
-const FLS = ['6710','5419','8328','7027','6527','8108','6427','7927','6599'];
-const FL_TONS = {'6710':'25톤','5419':'20톤','8328':'16톤','7027':'5톤','6527':'5톤','8108':'7톤','6427':'7톤','7927':'7톤','6599':'7톤'};
-const FL_RATE = {'6710':330000,'5419':180000,'8328':140000,'7027':60000,'6527':60000,'8108':60000,'6427':60000,'7927':60000,'6599':60000};
+// ★ 6710C (25톤 코일 전용) 추가
+const FLS = ['6710','6710C','5419','8328','7027','6527','8108','6427','7927','6599'];
+
+const FL_TONS = {
+  '6710':  '25톤',
+  '6710C': '25톤(코일)',   // ★ 추가
+  '5419':  '20톤',
+  '8328':  '16톤',
+  '7027':  '5톤',
+  '6527':  '5톤',
+  '8108':  '7톤',
+  '6427':  '7톤',
+  '7927':  '7톤',
+  '6599':  '7톤'
+};
+
+const FL_RATE = {
+  '6710':  330000,
+  '6710C': 240000,   // ★ 추가 (네고 단가)
+  '5419':  180000,
+  '8328':  140000,
+  '7027':   60000,
+  '6527':   60000,
+  '8108':   60000,
+  '6427':   60000,
+  '7927':   60000,
+  '6599':   60000
+};
+
+// 코일 전용 호기 여부
+function isCoil(fl) { return fl === '6710C'; }
+
+// 시트에 저장할 때 표시 레이블 (6710C → '6710 코일')
+function flLabel(fl) { return fl === '6710C' ? '6710 코일' : fl; }
 
 // 첫 40분 = 1시간, 이후 60분 단위 올림
 function calcBilledHours(ms) {
@@ -662,7 +713,6 @@ function calcBilledHours(ms) {
   return 1 + Math.ceil((totalMin - 40) / 60);
 }
 
-// 단가 계산
 function calcPrice(fl, ms) {
   const rate = FL_RATE[fl] || 0;
   const hours = calcBilledHours(ms);
@@ -672,6 +722,7 @@ function calcPrice(fl, ms) {
 function fmtPrice(n) {
   return n.toLocaleString('ko-KR') + '원';
 }
+
 let selFL = null, selReason = null;
 let sessions = JSON.parse(localStorage.getItem('fl-sess') || '{}');
 let logs     = JSON.parse(localStorage.getItem('fl-logs') || '[]');
@@ -699,13 +750,19 @@ function renderFLGrid() {
   const g = document.getElementById('fl-grid');
   g.innerHTML = '';
   FLS.forEach(fl => {
-    const on  = !!sessions[fl];
-    const sel = fl === selFL;
-    const d   = document.createElement('div');
-    d.className = 'fl-card' + (on ? ' in-use' : '') + (sel ? ' selected' : '');
+    const on   = !!sessions[fl];
+    const sel  = fl === selFL;
+    const coil = isCoil(fl);
+    const d    = document.createElement('div');
+    let cls = 'fl-card';
+    if (coil) cls += ' coil';
+    if (on)   cls += ' in-use';
+    if (sel)  cls += ' selected';
+    d.className = cls;
     d.innerHTML = `<div class="fl-dot"></div>
-      <div class="fl-num">${fl}</div>
-      <div class="fl-label">${on ? '사용 중' : FL_TONS[fl]||''}</div>`;
+      <div class="fl-num">${fl === '6710C' ? '6710' : fl}</div>
+      <div class="fl-label">${on ? '사용 중' : FL_TONS[fl]||''}</div>
+      ${coil ? '<div class="fl-coil-badge">코일전용</div>' : ''}`;
     d.onclick = () => selectFL(fl);
     g.appendChild(d);
   });
@@ -721,7 +778,7 @@ function selectFL(fl) {
   if (on) {
     const s = sessions[fl];
     document.getElementById('end-detail').innerHTML =
-      `<strong>${s.fl}</strong> · ${s.name}<br>
+      `<strong>${flLabel(s.fl)}</strong> · ${s.name}<br>
        <span style="color:var(--text3)">이유:</span> ${s.reason}<br>
        <span style="color:var(--text3)">시작:</span> <span class="mono">${s.startStr}</span>`;
   }
@@ -754,7 +811,7 @@ function handleStart() {
   const finalReason = custom || selReason;
   if (!finalReason) return alert('이용 사유를 선택하거나 직접 입력하세요.');
   const now = new Date();
-  document.getElementById('mc-fl').textContent     = selFL;
+  document.getElementById('mc-fl').textContent     = flLabel(selFL);
   document.getElementById('mc-name').textContent   = name;
   document.getElementById('mc-dept').textContent   = document.getElementById('inp-dept').value || '미지정';
   document.getElementById('mc-system').textContent = system;
@@ -799,11 +856,20 @@ async function confirmStart() {
   document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('active'));
   selReason = null;
 
-  // 시트 전송
+  // 시트 전송 (flLabel로 변환해서 전송)
   if (SCRIPT_URL) {
     showSending('sending-start', true);
     try {
-      await postToSheet({ action: 'start', rowId:s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', workLocation:s.location||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'', startStr:s.startStr, note:s.note||'' });
+      await postToSheet({
+        action: 'start', rowId: s.rowId,
+        fl: s.fl,                   // 내부 키 (6710C)
+        flLabel: flLabel(s.fl),     // ★ 시트 표시용 ('6710 코일')
+        name: s.name, dept: s.dept,
+        system: s.system||'', workLocation: s.location||'',
+        vessel: s.vessel||'', reason: s.reason,
+        customReason: s.customReason||'',
+        startStr: s.startStr, note: s.note||''
+      });
     } catch(e) { console.warn('시트 전송 실패:', e); }
     showSending('sending-start', false);
   }
@@ -815,7 +881,7 @@ function handleEnd() {
   const s = sessions[selFL];
   if (!s) return;
   const elapsed = Date.now() - s.startMs;
-  document.getElementById('me-fl').textContent      = s.fl;
+  document.getElementById('me-fl').textContent      = flLabel(s.fl);
   document.getElementById('me-name').textContent    = s.name;
   document.getElementById('me-start').textContent   = s.startStr;
   document.getElementById('me-elapsed').textContent = fmtElapsed(elapsed);
@@ -837,7 +903,18 @@ async function confirmEnd() {
   if (SCRIPT_URL) {
     showSending('sending-end', true);
     try {
-      await postToSheet({ action: 'end', rowId: s.rowId, fl: s.fl, name: s.name, dept: s.dept||'', system: s.system||'', workLocation: s.location||'', vessel: s.vessel||'', reason: s.reason||'', customReason: s.customReason||'', note: s.note||'', startStr: s.startStr, endStr: log.endStr, elapsedMin: Math.round(elapsed/60000), elapsedStr: fmtElapsed(elapsed) });
+      await postToSheet({
+        action: 'end', rowId: s.rowId,
+        fl: s.fl,               // 내부 키 (6710C)
+        flLabel: flLabel(s.fl), // ★ 시트 표시용 ('6710 코일')
+        name: s.name, dept: s.dept||'',
+        system: s.system||'', workLocation: s.location||'',
+        vessel: s.vessel||'', reason: s.reason||'',
+        customReason: s.customReason||'', note: s.note||'',
+        startStr: s.startStr, endStr: log.endStr,
+        elapsedMin: Math.round(elapsed/60000),
+        elapsedStr: fmtElapsed(elapsed)
+      });
     } catch(e) { console.warn('시트 전송 실패:', e); }
     showSending('sending-end', false);
   }
@@ -854,7 +931,7 @@ function updateBanner() {
   if (!all.length) { banner.classList.remove('visible'); return; }
   const s = (selFL && sessions[selFL]) ? sessions[selFL] : all[0];
   banner.classList.add('visible');
-  document.getElementById('bn-fl').textContent   = s.fl;
+  document.getElementById('bn-fl').textContent   = flLabel(s.fl);
   document.getElementById('bn-info').textContent = `${s.name} · ${s.reason}`;
   document.getElementById('bn-timer').textContent = fmtElapsed(Date.now() - s.startMs);
 }
@@ -864,7 +941,7 @@ function showSending(id, v) {
   document.getElementById('btn-start').disabled = v;
 }
 
-// ── Sheet API (GET 방식으로 CORS 우회) ──
+// ── Sheet API ──
 async function postToSheet(data) {
   const params = new URLSearchParams(data);
   await fetch(SCRIPT_URL + '?' + params.toString(), {
@@ -943,14 +1020,26 @@ function fetchJSONP(url) {
 function buildLocalRows() {
   const rows = [];
   Object.values(sessions).forEach(s => {
-    rows.push({ fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', workLocation:s.location||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'',
-      startStr:s.startStr, endStr:'-', elapsedMs: Date.now()-s.startMs,
-      note:s.note, status:'on', startMs:s.startMs });
+    rows.push({
+      fl: s.fl, name: s.name, dept: s.dept,
+      system: s.system||'', workLocation: s.location||'',
+      vessel: s.vessel||'', reason: s.reason,
+      customReason: s.customReason||'',
+      startStr: s.startStr, endStr: '-',
+      elapsedMs: Date.now()-s.startMs,
+      note: s.note, status: 'on', startMs: s.startMs
+    });
   });
   logs.forEach(l => {
-    rows.push({ id:l.id||l.startMs+'_'+l.fl, fl:l.fl, name:l.name, dept:l.dept, system:l.system||'', workLocation:l.location||'', vessel:l.vessel||'', reason:l.reason, customReason:l.customReason||'',
-      startStr:l.startStr, endStr:l.endStr, elapsedMs:l.elapsedMs,
-      note:l.note, status:'done', startMs:l.startMs, date:l.date });
+    rows.push({
+      id: l.id||l.startMs+'_'+l.fl, fl: l.fl, name: l.name, dept: l.dept,
+      system: l.system||'', workLocation: l.location||'',
+      vessel: l.vessel||'', reason: l.reason,
+      customReason: l.customReason||'',
+      startStr: l.startStr, endStr: l.endStr,
+      elapsedMs: l.elapsedMs,
+      note: l.note, status: 'done', startMs: l.startMs, date: l.date
+    });
   });
   return rows;
 }
@@ -961,10 +1050,14 @@ function renderFLMini() {
   const g = document.getElementById('fl-status-grid');
   g.innerHTML = '';
   FLS.forEach(fl => {
-    const on = !!sessions[fl];
-    const d = document.createElement('div');
-    d.className = 'fl-sc' + (on ? ' on' : '');
-    d.innerHTML = `<div class="fl-sc-num">${fl}</div>
+    const on   = !!sessions[fl];
+    const coil = isCoil(fl);
+    const d    = document.createElement('div');
+    let cls = 'fl-sc';
+    if (coil) cls += ' coil-type';
+    if (on)   cls += ' on';
+    d.className = cls;
+    d.innerHTML = `<div class="fl-sc-num">${fl === '6710C' ? '6710코일' : fl}</div>
       <div class="fl-sc-state">${on ? fmtElapsed(Date.now()-sessions[fl].startMs) : '대기'}</div>`;
     g.appendChild(d);
   });
@@ -977,13 +1070,15 @@ function renderTable() {
   const flf = document.getElementById('f-fl').value;
   const sf  = document.getElementById('f-status').value;
 
-  // 시트에서 불러온 데이터가 있으면 우선 사용, 없으면 로컬
   const source = (adminRows && adminRows.length) ? adminRows : buildLocalRows();
-  // 진행 중 세션은 항상 로컬에서 추가
   const onRows = Object.values(sessions).map(s => ({
-    id: s.rowId, fl:s.fl, name:s.name, dept:s.dept, system:s.system||'', workLocation:s.location||'', vessel:s.vessel||'', reason:s.reason, customReason:s.customReason||'',
-    startStr:s.startStr, endStr:'-', elapsedMs: Date.now()-s.startMs,
-    note:s.note, status:'on', startMs:s.startMs
+    id: s.rowId, fl: s.fl, name: s.name, dept: s.dept,
+    system: s.system||'', workLocation: s.location||'',
+    vessel: s.vessel||'', reason: s.reason,
+    customReason: s.customReason||'',
+    startStr: s.startStr, endStr: '-',
+    elapsedMs: Date.now()-s.startMs,
+    note: s.note, status: 'on', startMs: s.startMs
   }));
   const combined = [...onRows, ...source.filter(r => r.status === 'done')];
 
@@ -1001,13 +1096,17 @@ function renderTable() {
     tbody.innerHTML = '<tr><td colspan="17" class="empty">기록이 없습니다</td></tr>';
     return;
   }
-  tbody.innerHTML = rows.map((r,i) => {
+  tbody.innerHTML = rows.map((r) => {
     const bHours = r.status==='done' ? calcBilledHours(r.elapsedMs||0) : '-';
     const price  = r.status==='done' ? fmtPrice(calcPrice(r.fl, r.elapsedMs||0)) : '-';
+    const coil   = isCoil(r.fl);
     return `
     <tr>
       <td style="color:var(--text2);font-size:12px">${r.date||'-'}</td>
-      <td><span class="fl-tag">${r.fl}</span><br><span style="font-size:10px;color:var(--text3)">${FL_TONS[r.fl]||''}</span></td>
+      <td>
+        <span class="fl-tag ${coil?'coil':''}">${flLabel(r.fl)}</span><br>
+        <span style="font-size:10px;color:var(--text3)">${FL_TONS[r.fl]||''}</span>
+      </td>
       <td>${r.name}</td>
       <td style="color:var(--text2)">${r.dept||'-'}</td>
       <td style="color:var(--text2)">${r.system||''}</td>
@@ -1019,7 +1118,7 @@ function renderTable() {
       <td class="mono" style="color:var(--text2)">${r.endStr||'-'}</td>
       <td class="mono" style="color:${r.status==='on'?'var(--green)':'var(--text2)'}">${fmtElapsed(r.elapsedMs||0)}</td>
       <td class="mono" style="color:var(--blue);font-weight:500">${bHours === '-' ? '-' : bHours+'h'}</td>
-      <td class="mono" style="color:var(--text);font-weight:500">${price}</td>
+      <td class="mono" style="color:${coil?'var(--amber)':'var(--text)'};font-weight:500">${price}</td>
       <td><span class="badge ${r.status==='on'?'badge-on':'badge-done'}">${r.status==='on'?'진행 중':'완료'}</span></td>
       <td style="color:var(--text3);font-size:12px">${r.note||'-'}</td>
       <td>${r.status==='done' ? `<button class="btn-del" onclick="deleteLog('${r.id||''}','${r.fl}','${r.startStr}')">삭제</button>` : ''}</td>
@@ -1035,11 +1134,12 @@ function renderCards(rows) {
   el.innerHTML = rows.map(r => {
     const bHours = r.status==='done' ? calcBilledHours(r.elapsedMs||0) : '-';
     const price  = r.status==='done' ? fmtPrice(calcPrice(r.fl, r.elapsedMs||0)) : '-';
+    const coil   = isCoil(r.fl);
     return `
     <div class="log-card">
       <div class="log-card-header">
         <div>
-          <span class="log-card-fl">${r.fl}</span>
+          <span class="log-card-fl ${coil?'coil':''}">${flLabel(r.fl)}</span>
           <span class="log-card-tons">${FL_TONS[r.fl]||''}</span>
         </div>
         <span class="badge ${r.status==='on'?'badge-on':'badge-done'}">${r.status==='on'?'진행 중':'완료'}</span>
@@ -1058,7 +1158,7 @@ function renderCards(rows) {
         <div class="log-card-row"><span class="log-card-label">청구시간</span><span class="log-card-val" style="color:var(--blue)">${bHours === '-' ? '-' : bHours+'h'}</span></div>
       </div>
       <div class="log-card-footer">
-        <span class="log-card-price">${price}</span>
+        <span class="log-card-price" style="color:${coil?'var(--amber)':'var(--text)'}">${price}</span>
         ${r.note ? `<span style="font-size:11px;color:var(--text3)">${r.note}</span>` : ''}
       </div>
     </div>`;
@@ -1066,7 +1166,7 @@ function renderCards(rows) {
 }
 
 function deleteLog(id, fl, startStr) {
-  if (!confirm(`[${fl}] ${startStr} 기록을 삭제할까요?`)) return;
+  if (!confirm(`[${flLabel(fl)}] ${startStr} 기록을 삭제할까요?`)) return;
   logs = logs.filter(l => (l.id||l.startMs+'_'+l.fl) !== id);
   save();
   renderTable();
@@ -1077,7 +1177,9 @@ function exportCSV() {
   const rows = buildLocalRows();
   const hd = ['호기','톤수','담당자','부서','시스템','작업장소','호선','이용사유','직접입력','시작','종료','이용시간(분)','청구시간(h)','금액(원)','상태','비고'];
   const body = rows.map(r => [
-    r.fl, FL_TONS[r.fl]||'', r.name, r.dept||'', r.system||'', r.workLocation||'', r.vessel||'', r.reason, r.customReason||'', r.startStr, r.endStr||'',
+    flLabel(r.fl), FL_TONS[r.fl]||'', r.name, r.dept||'', r.system||'',
+    r.workLocation||'', r.vessel||'', r.reason, r.customReason||'',
+    r.startStr, r.endStr||'',
     Math.round((r.elapsedMs||0)/60000),
     r.status==='done'?calcBilledHours(r.elapsedMs||0):'',
     r.status==='done'?calcPrice(r.fl,r.elapsedMs||0):'',
@@ -1110,8 +1212,6 @@ setInterval(() => {
   updateBanner();
   renderFLMini();
 }, 1000);
-
-
 </script>
 </body>
 </html>
