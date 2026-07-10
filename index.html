@@ -101,22 +101,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .fl-card:hover { border-color: var(--blue-l); box-shadow: var(--shadow-m); }
 .fl-card.selected { border-color: var(--blue); background: var(--blue-xl); box-shadow: var(--shadow-m); }
 .fl-card.in-use { border-color: #86efac; background: var(--green-bg); }
-/* 코일 전용 카드 스타일 */
-.fl-card.coil { border-color: var(--border); background: var(--bg2); }
-.fl-card.coil:hover { border-color: var(--amber); box-shadow: 0 4px 16px rgba(217,119,6,0.10); }
-.fl-card.coil.selected { border-color: var(--amber); background: var(--bg2); }
-.fl-card.coil.in-use { border-color: #86efac; background: var(--green-bg); }
 .fl-num {
   font-family: var(--mono); font-size: 18px; font-weight: 500;
   color: var(--blue); margin-bottom: 3px;
 }
 .fl-card.in-use .fl-num { color: var(--green); }
 .fl-card.selected .fl-num { color: var(--blue-b); }
-.fl-card.coil .fl-num { color: var(--amber); font-size: 15px; }
-.fl-card.coil.selected .fl-num { color: var(--amber); }
 .fl-label { font-size: 11px; color: var(--text3); }
 .fl-card.in-use .fl-label { color: var(--green); }
-.fl-card.coil .fl-label { color: var(--amber); }
 .fl-dot {
   width: 7px; height: 7px; border-radius: 50%;
   position: absolute; top: 8px; right: 8px;
@@ -124,16 +116,6 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 }
 .fl-card.in-use .fl-dot { background: var(--green); box-shadow: 0 0 5px #4ade80; }
 .fl-card.selected .fl-dot { background: var(--blue); }
-.fl-card.coil .fl-dot { background: var(--amber); }
-.fl-card.coil.in-use .fl-dot { background: var(--green); box-shadow: 0 0 5px #4ade80; }
-/* 코일 배지 */
-.fl-coil-badge {
-  display: inline-block;
-  font-size: 9px; font-weight: 600;
-  background: var(--amber); color: #fff;
-  border-radius: 4px; padding: 1px 5px;
-  margin-top: 3px; letter-spacing: 0.03em;
-}
 
 /* Active banner */
 .active-banner {
@@ -288,11 +270,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
   box-shadow: var(--shadow);
 }
 .fl-sc.on { border-color: #86efac; background: var(--green-bg); }
-.fl-sc.coil-type { border-color: var(--border); background: var(--bg2); }
-.fl-sc.coil-type.on { border-color: #86efac; background: var(--green-bg); }
 .fl-sc-num { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--text2); margin-bottom: 2px; }
 .fl-sc.on .fl-sc-num { color: var(--green); }
-.fl-sc.coil-type .fl-sc-num { color: var(--amber); font-size: 10px; }
 .fl-sc-state { font-size: 9px; color: var(--text3); }
 .fl-sc.on .fl-sc-state { color: var(--green); }
 
@@ -332,7 +311,6 @@ tr:hover td { background: var(--bg3); }
 .badge-done { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
 .mono { font-family: var(--mono); font-size: 12px; }
 .fl-tag { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--blue); }
-.fl-tag.coil { color: var(--amber); }
 .empty { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
 .btn-del {
   padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500;
@@ -417,7 +395,6 @@ tr:hover td { background: var(--bg3); }
   align-items: center; margin-bottom: 10px;
 }
 .log-card-fl { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--blue); }
-.log-card-fl.coil { color: var(--amber); }
 .log-card-tons { font-size: 11px; color: var(--text3); margin-left: 5px; }
 .log-card-body { font-size: 13px; line-height: 1.9; }
 .log-card-row { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 4px 0; }
@@ -589,7 +566,7 @@ tr:hover td { background: var(--bg3); }
         <input class="fi" id="f-vessel" type="text" placeholder="호선 검색" oninput="renderTable()" style="width:120px">
         <select class="fi" id="f-fl" onchange="renderTable()">
           <option value="">전체 호기</option>
-          <option>6710</option><option>6710C</option><option>5419</option>
+          <option>6710</option><option>5419</option>
           <option>8328</option><option>7027</option><option>6527</option>
           <option>8108</option><option>6427</option><option>7927</option>
           <option>6599</option>
@@ -670,12 +647,10 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw30dTwfH0_epWTSrcJi
 const ADMIN_PW   = '1234';
 // ════════════════════════════════════════
 
-// ★ 6710C (25톤 코일 전용) 추가
-const FLS = ['6710','6710C','5419','8328','7027','6527','8108','6427','7927','6599'];
+const FLS = ['6710','5419','8328','7027','6527','8108','6427','7927','6599'];
 
 const FL_TONS = {
   '6710':  '25톤',
-  '6710C': '25톤(코일)',   // ★ 추가
   '5419':  '20톤',
   '8328':  '16톤',
   '7027':  '5톤',
@@ -688,7 +663,6 @@ const FL_TONS = {
 
 const FL_RATE = {
   '6710':  330000,
-  '6710C': 240000,   // ★ 추가 (네고 단가)
   '5419':  180000,
   '8328':  140000,
   '7027':   60000,
@@ -699,11 +673,8 @@ const FL_RATE = {
   '6599':   60000
 };
 
-// 코일 전용 호기 여부
-function isCoil(fl) { return fl === '6710C'; }
-
-// 시트에 저장할 때 표시 레이블 (6710C → '6710 코일')
-function flLabel(fl) { return fl === '6710C' ? '6710 코일' : fl; }
+// 시트에 저장할 때 표시 레이블
+function flLabel(fl) { return fl; }
 
 // 첫 40분 = 1시간, 이후 60분 단위 올림
 function calcBilledHours(ms) {
@@ -752,17 +723,14 @@ function renderFLGrid() {
   FLS.forEach(fl => {
     const on   = !!sessions[fl];
     const sel  = fl === selFL;
-    const coil = isCoil(fl);
     const d    = document.createElement('div');
     let cls = 'fl-card';
-    if (coil) cls += ' coil';
     if (on)   cls += ' in-use';
     if (sel)  cls += ' selected';
     d.className = cls;
     d.innerHTML = `<div class="fl-dot"></div>
-      <div class="fl-num">${fl === '6710C' ? '6710' : fl}</div>
-      <div class="fl-label">${on ? '사용 중' : FL_TONS[fl]||''}</div>
-      ${coil ? '<div class="fl-coil-badge">코일전용</div>' : ''}`;
+      <div class="fl-num">${fl}</div>
+      <div class="fl-label">${on ? '사용 중' : FL_TONS[fl]||''}</div>`;
     d.onclick = () => selectFL(fl);
     g.appendChild(d);
   });
@@ -856,14 +824,14 @@ async function confirmStart() {
   document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('active'));
   selReason = null;
 
-  // 시트 전송 (flLabel로 변환해서 전송)
+  // 시트 전송
   if (SCRIPT_URL) {
     showSending('sending-start', true);
     try {
       await postToSheet({
         action: 'start', rowId: s.rowId,
-        fl: s.fl,                   // 내부 키 (6710C)
-        flLabel: flLabel(s.fl),     // ★ 시트 표시용 ('6710 코일')
+        fl: s.fl,
+        flLabel: flLabel(s.fl),
         name: s.name, dept: s.dept,
         system: s.system||'', workLocation: s.location||'',
         vessel: s.vessel||'', reason: s.reason,
@@ -905,8 +873,8 @@ async function confirmEnd() {
     try {
       await postToSheet({
         action: 'end', rowId: s.rowId,
-        fl: s.fl,               // 내부 키 (6710C)
-        flLabel: flLabel(s.fl), // ★ 시트 표시용 ('6710 코일')
+        fl: s.fl,
+        flLabel: flLabel(s.fl),
         name: s.name, dept: s.dept||'',
         system: s.system||'', workLocation: s.location||'',
         vessel: s.vessel||'', reason: s.reason||'',
@@ -1051,13 +1019,11 @@ function renderFLMini() {
   g.innerHTML = '';
   FLS.forEach(fl => {
     const on   = !!sessions[fl];
-    const coil = isCoil(fl);
     const d    = document.createElement('div');
     let cls = 'fl-sc';
-    if (coil) cls += ' coil-type';
     if (on)   cls += ' on';
     d.className = cls;
-    d.innerHTML = `<div class="fl-sc-num">${fl === '6710C' ? '6710코일' : fl}</div>
+    d.innerHTML = `<div class="fl-sc-num">${fl}</div>
       <div class="fl-sc-state">${on ? fmtElapsed(Date.now()-sessions[fl].startMs) : '대기'}</div>`;
     g.appendChild(d);
   });
@@ -1099,12 +1065,11 @@ function renderTable() {
   tbody.innerHTML = rows.map((r) => {
     const bHours = r.status==='done' ? calcBilledHours(r.elapsedMs||0) : '-';
     const price  = r.status==='done' ? fmtPrice(calcPrice(r.fl, r.elapsedMs||0)) : '-';
-    const coil   = isCoil(r.fl);
     return `
     <tr>
       <td style="color:var(--text2);font-size:12px">${r.date||'-'}</td>
       <td>
-        <span class="fl-tag ${coil?'coil':''}">${flLabel(r.fl)}</span><br>
+        <span class="fl-tag">${flLabel(r.fl)}</span><br>
         <span style="font-size:10px;color:var(--text3)">${FL_TONS[r.fl]||''}</span>
       </td>
       <td>${r.name}</td>
@@ -1118,7 +1083,7 @@ function renderTable() {
       <td class="mono" style="color:var(--text2)">${r.endStr||'-'}</td>
       <td class="mono" style="color:${r.status==='on'?'var(--green)':'var(--text2)'}">${fmtElapsed(r.elapsedMs||0)}</td>
       <td class="mono" style="color:var(--blue);font-weight:500">${bHours === '-' ? '-' : bHours+'h'}</td>
-      <td class="mono" style="color:${coil?'var(--amber)':'var(--text)'};font-weight:500">${price}</td>
+      <td class="mono" style="color:var(--text);font-weight:500">${price}</td>
       <td><span class="badge ${r.status==='on'?'badge-on':'badge-done'}">${r.status==='on'?'진행 중':'완료'}</span></td>
       <td style="color:var(--text3);font-size:12px">${r.note||'-'}</td>
       <td>${r.status==='done' ? `<button class="btn-del" onclick="deleteLog('${r.id||''}','${r.fl}','${r.startStr}')">삭제</button>` : ''}</td>
@@ -1134,12 +1099,11 @@ function renderCards(rows) {
   el.innerHTML = rows.map(r => {
     const bHours = r.status==='done' ? calcBilledHours(r.elapsedMs||0) : '-';
     const price  = r.status==='done' ? fmtPrice(calcPrice(r.fl, r.elapsedMs||0)) : '-';
-    const coil   = isCoil(r.fl);
     return `
     <div class="log-card">
       <div class="log-card-header">
         <div>
-          <span class="log-card-fl ${coil?'coil':''}">${flLabel(r.fl)}</span>
+          <span class="log-card-fl">${flLabel(r.fl)}</span>
           <span class="log-card-tons">${FL_TONS[r.fl]||''}</span>
         </div>
         <span class="badge ${r.status==='on'?'badge-on':'badge-done'}">${r.status==='on'?'진행 중':'완료'}</span>
@@ -1158,7 +1122,7 @@ function renderCards(rows) {
         <div class="log-card-row"><span class="log-card-label">청구시간</span><span class="log-card-val" style="color:var(--blue)">${bHours === '-' ? '-' : bHours+'h'}</span></div>
       </div>
       <div class="log-card-footer">
-        <span class="log-card-price" style="color:${coil?'var(--amber)':'var(--text)'}">${price}</span>
+        <span class="log-card-price">${price}</span>
         ${r.note ? `<span style="font-size:11px;color:var(--text3)">${r.note}</span>` : ''}
       </div>
     </div>`;
