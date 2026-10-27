@@ -680,7 +680,8 @@ function flLabel(fl) { return fl; }
 
 // 첫 40분 = 1시간, 이후 60분 단위 올림
 function calcBilledHours(ms) {
-  const totalMin = ms / 60000;
+  // 시트·메일과 같은 기준으로 분 단위 반올림 후 계산
+  const totalMin = Math.round(ms / 60000);
   if (totalMin <= 0) return 0;
   if (totalMin <= 40) return 1;
   return 1 + Math.ceil((totalMin - 40) / 60);
@@ -701,6 +702,12 @@ let sessions = JSON.parse(localStorage.getItem('fl-sess') || '{}');
 let logs     = JSON.parse(localStorage.getItem('fl-logs') || '[]');
 let timerIv  = null;
 let adminRows = [];
+
+// 다른 탭에서 바뀐 사용 상태를 다시 읽어옴 (오래된 탭에서 중복 종료 방지)
+function reloadState() {
+  sessions = JSON.parse(localStorage.getItem('fl-sess') || '{}');
+  logs     = JSON.parse(localStorage.getItem('fl-logs') || '[]');
+}
 
 function save() {
   localStorage.setItem('fl-sess', JSON.stringify(sessions));
@@ -794,6 +801,8 @@ function handleStart() {
 
 async function confirmStart() {
   closeModal('m-start');
+  reloadState();
+  if (sessions[selFL]) { alert('이미 사용 중인 호기입니다.'); selectFL(selFL); return; }
   const now = new Date();
   const custom = document.getElementById('inp-reason-custom').value.trim();
   const s = {
@@ -848,8 +857,9 @@ async function confirmStart() {
 }
 
 function handleEnd() {
+  reloadState();
   const s = sessions[selFL];
-  if (!s) return;
+  if (!s) { alert('이미 종료된 작업입니다.'); selectFL(selFL); return; }
   const elapsed = Date.now() - s.startMs;
   document.getElementById('me-fl').textContent      = flLabel(s.fl);
   document.getElementById('me-name').textContent    = s.name;
@@ -858,11 +868,16 @@ function handleEnd() {
   document.getElementById('m-end').classList.add('open');
 }
 
+let ending = false;
 async function confirmEnd() {
   closeModal('m-end');
+  if (ending) return;
+  reloadState();
   const now = new Date();
   const fl  = selFL;
   const s   = sessions[fl];
+  if (!s) { alert('이미 종료된 작업입니다.'); selectFL(fl); return; }
+  ending = true;
   const elapsed = now.getTime() - s.startMs;
   const log = { ...s, endMs: now.getTime(), endStr: fmtTime(now), elapsedMs: elapsed, date: now.toLocaleDateString('ko-KR') };
   log.id = log.startMs + '_' + fl;
@@ -888,6 +903,7 @@ async function confirmEnd() {
     } catch(e) { console.warn('시트 전송 실패:', e); }
     showSending('sending-end', false);
   }
+  ending = false;
   selFL = null;
   document.getElementById('form-section').classList.remove('visible');
   document.getElementById('end-section').classList.remove('visible');
@@ -1173,6 +1189,11 @@ function fmtElapsed(ms) {
 }
 
 // ── Init ──
+window.addEventListener('storage', e => {
+  if (e.key !== 'fl-sess' && e.key !== 'fl-logs') return;
+  reloadState();
+  if (selFL) selectFL(selFL); else renderFLGrid();
+});
 renderFLGrid();
 setInterval(() => {
   updateBanner();
